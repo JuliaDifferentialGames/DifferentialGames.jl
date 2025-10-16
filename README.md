@@ -11,6 +11,8 @@
 
 This is a work in progress base package for solving various different types of differential games. The goal is to first support the following types of differential game problem types:
 
+- Zero-sum Games
+- LQ Games
 - Deterministic General Nash Equilibrium Problems
 - Stochastic General Nash Equilibrium Problems
 - Jump Diffusion General Nash Equilibrium Problems
