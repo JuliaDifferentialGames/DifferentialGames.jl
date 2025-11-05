@@ -29,9 +29,9 @@ abstract type AbstractLQGame{T, Y, J, f, C} <: AbstractGNEP{T, Y, J, f, C} end
 
 
 """
-    LQGame
+    LQGP
 
-Concrete implementation of a linear-quadratic differential game.
+Concrete implementation of a linear-quadratic differential game problem.
 
 # Fields
 - `A::Matrix{Float64}` : system dynamics matrix
@@ -44,13 +44,33 @@ Concrete implementation of a linear-quadratic differential game.
 # Notes
 This type implements `AbstractLQGame` and is suitable for use with LQ solvers.
 """
-struct LQGame <: AbstractLQGame{Float64, Vector{Float64}, Function, Function, Nothing}
+struct LQGP <: AbstractLQGame{Float64, Vector{Float64}, Function, Function, Nothing}
     A::Matrix{Float64}  # n×n
     B::Matrix{Float64}  # n×m
     Q::Matrix{Float64}  # n×n
     R::Matrix{Float64}  # m×m
     x0::Vector{Float64} # n
     u0::Vector{Float64} # m
+end
+
+
+"""
+    LQGP
+
+Concrete implementation of a linear-quadratic differential game problem.
+
+# Fields
+- `players::Vector{Player}` : collection of players for the problem
+- `tspan` : time span/horizon
+
+# Notes
+This type implements `AbstractLQGame` and is suitable for use with LQ solvers.
+"""
+function LQGP(players::Vector{Player}, tspan)
+    # Extract matrices if present or approximate numerically
+    # For now, assume each player defines linear f and quadratic J
+    #A, B, Q, R = ...  # extract or infer
+    return 42 #LQGame(A, B, Q, R, players[1].x0, zeros(players[1].m))
 end
 
 

@@ -25,8 +25,5 @@ Afterwards, the goal is to support:
 - Games with learned objective functions
 
 
-## Strucuture Inspiration:
-
-- https://github.com/SciML/SciMLBase.jl/tree/master/src
-- https://github.com/SciML/DiffEqBase.jl/tree/master/src
-- https://github.com/SciML/Optimization.jl/tree/master/src  + https://github.com/robertfeldt/BlackBoxOptim.jl
+## Some Reference Papers 
+- https://repository.tilburguniversity.edu/server/api/core/bitstreams/0abdb4ed-e84c-49f6-9f94-9c66154f6e11/content 
