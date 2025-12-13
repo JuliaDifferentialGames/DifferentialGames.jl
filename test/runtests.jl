@@ -1,6 +1,10 @@
 using DifferentialGames
 using Test
 
+
+include("lqgp_test.jl")
+
+
 @testset "DifferentialGames.jl" begin
     # Write your tests here.
     @test test_f(2,1) == 7

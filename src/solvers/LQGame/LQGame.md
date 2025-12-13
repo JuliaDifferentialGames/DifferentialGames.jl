@@ -1,1 +1,0 @@
-A basic N player LQ solver
