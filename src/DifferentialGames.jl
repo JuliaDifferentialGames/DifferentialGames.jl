@@ -3,6 +3,7 @@ module DifferentialGames
 # Includes
 include("problems/base.jl")
 include("problems/GNEP.jl")
+include("core/player.jl")
 
 # Exports
 export 
@@ -23,6 +24,9 @@ export
     GNEProblem, 
     PotentialGameProblem, 
     LexicographicGameProblem, 
+
+    # Player-based Interface 
+    Player,
     
     # Helper functions
     num_players, 
