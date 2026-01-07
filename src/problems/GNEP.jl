@@ -16,6 +16,24 @@ All GNEPs involve:
 abstract type AbstractGNEP{T} <: DifferentialGame end
 
 """
+    AbstractPDGNEP{T} <: AbstractGNEP{T}
+
+Abstract base type for a Partially Decoupled Generalized Nash Equilibrium Problem.
+
+# Type parameters
+- `T` : numeric type (e.g., `Float64`, `Float32`)
+
+# Notes
+All PDGNEPs involve:
+- Shared dynamics coupling all players
+- Per-player cost functionals
+- Strategy spaces for each player
+- Possible coupled constraints
+"""
+abstract type AbstractPDGNEP{T} <: AbstractGNEP{T} end
+
+
+"""
     AbstractPotentialGame{T} <: AbstractGNEP{T}
 
 Abstract base type for potential games (special subclass of GNEP).

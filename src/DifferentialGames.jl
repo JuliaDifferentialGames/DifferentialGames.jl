@@ -2,32 +2,33 @@ module DifferentialGames
 
 # Includes
 include("problems/base.jl")
-include("problems/GNEP.jl")
+include("core/constraints.jl")
 include("core/player.jl")
+include("problems/GNEP.jl")
 
 # Exports
 export 
-    # Testing 
-    test_f,
-
     # Abstract Types 
     DifferentialGame, 
     InverseDifferentialGame,
     AbstractLQGame,
 
+    # Player-based Interface 
+    ConstraintSpec,
+    Player,
+
     # Problems 
     AbstractGNEP, 
+    AbstractPDGNEP, 
     AbstractPotentialGame, 
     AbstractLexicographicGame, 
     AbstractLQGame, 
     LQGameProblem, 
-    GNEProblem, 
+    GNEProblem,
+    PDGNEProblem, 
     PotentialGameProblem, 
     LexicographicGameProblem, 
 
-    # Player-based Interface 
-    Player,
-    
     # Helper functions
     num_players, 
     state_dim, 

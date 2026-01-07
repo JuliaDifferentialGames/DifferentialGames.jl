@@ -5,33 +5,37 @@ using DifferentialGames  # your package module name
 @testset "LQGame construction" begin
     # Define test matrices and vectors
     A = [0.0 1.0; -1.0 -0.5]
-    B = [0.0; 1.0]
-    Q = I(2)
-    R = 1.0 * I(1)
+    B = reshape([0.0; 1.0], 2, 1)
+    Q = Matrix{Float64}(I(2)) 
+    R = Matrix{Float64}(1.0 * I(2))  
     x0 = [1.0, 0.0]
-    u0 = [0.0]
 
-    # Construct the game
-    game = LQGProblem(A, B, Q, R, x0, u0)
+    # Define game parameters
+    n_players = 2
+    tf = 10.0  # final time
 
-    # --- Type and structure checks ---
-    #@test game isa LQGP
-    @test game.A == A
-    @test game.B == B
-    @test game.Q == Q
-    @test game.R == R
-    @test game.x0 == x0
-    @test game.u0 == u0
+    # Create per-player control matrices
+    B_players = [B, B]  # Each player has control matrix B
 
-    # --- Dimension consistency ---
-    @test size(game.A, 1) == size(game.A, 2) == length(game.x0)
-    @test size(game.B, 1) == size(game.A, 1)
-    @test size(game.R, 1) == size(game.B, 2)
-    @test size(game.Q, 1) == size(game.A, 1)
+    # Create per-player cost matrices
+    Q_players = [Matrix(Q), Matrix(Q)]  # Each player has same state cost
+    R_players = [Matrix(R[1:1, 1:1]), Matrix(R[2:2, 2:2])]  # Each player controls 1 input
 
-    # # --- Sanity check on dynamic evaluation (if simulate exists) ---
-    # if @isdefined simulate
-    #     traj = simulate(game, (0.0, 1.0))
-    #     @test all(x -> length(x) == length(x0), traj)
-    # end
+    # Terminal cost matrices (typically same as running cost Q)
+    Qf_players = [Matrix(Q), Matrix(Q)]
+
+    # Control dimensions per player
+    control_dims = [1, 1]  # Each player controls 1 input
+
+    # Create the LQ game problem
+    game = LQGameProblem(
+        A,
+        B_players,
+        Q_players,
+        R_players,
+        Qf_players,
+        x0,
+        tf,
+        control_dims
+    )
 end

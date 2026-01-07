@@ -28,13 +28,14 @@ player2 = Player(
     terminal_cost=(X) -> -10.0*norm(X[1][1:2] - X[2][1:2])^2
 )
 
-# # Collision avoidance
-# collision = ConstraintSpec(
-#     (X, U, p, t) -> [0.5 - norm(X[1][1:2] - X[2][1:2])],
-#     INEQUALITY,
-#     1,
-#     [1, 2]
-# )
+# Collision avoidance
+collision = ConstraintSpec(
+    (X, U, p, t) -> [0.5 - norm(X[1][1:2] - X[2][1:2])],
+    :inequality,
+    1,
+    [1, 2]
+)
 
-# # Define the game
-# game = PDGNEProblem([player1, player2], [collision], 10.0, 0.1)
+# Define the game
+game = PDGNEProblem([player1, player2], [collision], 10.0, 0.1)
+
