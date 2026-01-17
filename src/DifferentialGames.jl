@@ -1,12 +1,8 @@
 module DifferentialGames
 
-# Includes
-# include("problems/base.jl")
-# include("core/constraints.jl")
-# include("core/player.jl")
-# include("problems/GNEP.jl")
+using Reexport
 
-# Exports
-# export 
+@reexport using DifferentialGamesBase
+@reexport using DifferentialGamesBase
 
 end

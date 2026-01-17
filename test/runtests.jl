@@ -1,12 +1,8 @@
 using DifferentialGames
 using Test
+using SafeTestsets
 
-
-include("lqgp_test.jl")
-
-
-# @testset "DifferentialGames.jl" begin
-#     # Write your tests here.
-#     @test test_f(2,1) == 7
-#     @test test_f(2,3) == 13
-# end
+@time begin
+    # All algorithm test are in their respective packages.
+    @test true
+end
