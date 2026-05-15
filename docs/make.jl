@@ -11,6 +11,14 @@ DocMeta.setdocmeta!(
 
 makedocs(
     modules  = [DifferentialGames, DifferentialGamesBase, DifferentialGamesBaseSolvers],
+    remotes  = Dict(
+        pkgdir(DifferentialGamesBase) => (
+            Remotes.GitHub("JuliaDifferentialGames", "DifferentialGamesBase.jl"), "main"
+        ),
+        pkgdir(DifferentialGamesBaseSolvers) => (
+            Remotes.GitHub("JuliaDifferentialGames", "DifferentialGamesBaseSolvers.jl"), "main"
+        ),
+    ),
     sitename = "DifferentialGames.jl",
     authors  = "BennetOutland <bennet.outland@pm.me> and contributors",
     format   = Documenter.HTML(
