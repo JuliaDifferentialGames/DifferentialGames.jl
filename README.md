@@ -83,8 +83,7 @@ This structure lets downstream packages depend only on what they need: solver au
 
 ### In Progress
 
-- 🚧 Inverse game solvers (MONGOOSE EnKF approach)
-- 🚧 Open-loop Nash equilibrium solvers
+- 🚧 Inverse game solvers 
 - 🚧 Callback/logging system
 
 ### Planned
@@ -106,7 +105,7 @@ To add a new solver:
 
 See [FNELQ](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/FNELQ) as a reference implementation and [ExampleSolver](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/ExampleSolver) as a minimal template.
 
-## Acknowledgments
+## Inspiration
 
 This package follows the design principles of the SciML ecosystem and draws inspiration from:
 
@@ -121,3 +120,7 @@ MIT License — see LICENSE file for details.
 ## Disclosure of Generative AI Usage
 
 Generative AI (Claude Sonnet 4.5/4.6) was used in the creation of this library as a programming aid including guided code generation, assistance with performance optimization, and documentation. All code and documentation has been reviewed by the author(s) for accuracy.
+
+## Acknowledgments
+
+Bennet Outland thanks the Department of War Science, Math, and Research for Transformation (SMART) Scholarship for academic funding. Outland dedicates his contribution S.D.G.
