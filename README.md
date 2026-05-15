@@ -1,113 +1,123 @@
-# DifferentialGames
+# DifferentialGames.jl
 
-<!--
-[![Build Status](https://github.com/BennetOutland/DifferentialGamesBase.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/BennetOutland/DifferentialGamesBase.jl/actions/workflows/CI.yml?query=branch%3Amain)
--->
-
-[![CI](https://github.com/JuliaDifferentialGames/DifferentialGamesBase/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaDifferentialGames/DifferentialGamesBase/actions/workflows/CI.yml)
+[![CI](https://github.com/JuliaDifferentialGames/DifferentialGames.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaDifferentialGames/DifferentialGames.jl/actions/workflows/CI.yml)
 [![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
 
-A Julia package for solving N-player differential games using numerical methods, following the SciML interface standards.
-Purpose
+A Julia ecosystem for solving N-player differential games using numerical methods, following the SciML interface conventions.
 
-## Purpose
-DifferentialGames.jl provides fast, flexible implementations of algorithms for computing Nash equilibria in differential games. The package supports both cooperative and non-cooperative games with applications to multi-agent control, robotics, and autonomous systems.
-
-> ⚠️ **Work in progress**
->
-> This repository is actively being developed and the API, files, and examples may change without notice. Use at your own risk.
+> ⚠️ **Work in progress** — API may change before v1.0.0.
 
 ## Installation
 
 ```julia
 using Pkg
-Pkg.add("https://github.com/JuliaDifferentialGames/DifferentialGames.jl.git")
+Pkg.add(url="https://github.com/JuliaDifferentialGames/DifferentialGames.jl")
 ```
-
 
 ## Quick Start
+
 ```julia
-using DifferentialGames
+using DifferentialGames, LinearAlgebra
 
-# Define a 2-player linear-quadratic game
-n, m = 4, 2  # state and control dimensions
-A = randn(n, n)
-B = [randn(n, m) for _ in 1:2]
-Q = [diagm(ones(n)) for _ in 1:2]
-R = [diagm(0.1*ones(m)) for _ in 1:2]
-Qf = [diagm(10.0*ones(n)) for _ in 1:2]
+# Two-player LQ game — feedback Nash equilibrium via FNELQ
+n = 4
+game = LQGameProblem(
+    0.95 * I(n),
+    [I(n)[:, 1:1], I(n)[:, 3:3]],
+    [diagm(ones(n)), diagm(ones(n))],
+    [fill(0.1, 1, 1), fill(0.1, 1, 1)],
+    [10.0 * diagm(ones(n)), 10.0 * diagm(ones(n))],
+    ones(n), 2.0; dt=0.1
+)
 
-game = LQGameProblem(A, B, Q, R, Qf, zeros(n), 10.0; dt=0.01)
-
-# Solve for feedback Nash equilibrium
-solver = FNELQ()
-sol = solve(game, solver; verbose=true)
-
-# Access solution
-K_gains = sol.solver_info[:feedback_gains]  # Time-varying feedback gains
-costs = sol.solver_info[:costs]              # Per-player costs
+sol = solve(game, FNELQ())
+println("Player 1 cost: ", get_cost(sol, 1))
+println("Player 2 cost: ", get_cost(sol, 2))
 ```
 
+```julia
+# Nonlinear game with collision avoidance — iLQGames
+using DifferentialGames
+
+dyn = (xi, ui, p, t) -> [xi[3]*cos(xi[4]); xi[3]*sin(xi[4]); ui[1]; ui[2]]
+stage    = DiagonalLQStageCost([1.0, 1.0, 0.1, 0.1], [0.1, 0.1])
+terminal = DiagonalLQTerminalCost([10.0, 10.0, 1.0, 1.0])
+
+col = SharedInequality([1, 2];
+    func = (x, u, p, t) -> [1.5^2 - sum((x[1:2] - x[5:6]).^2)],
+    dim  = 1)
+
+player1 = PlayerSpec(1, 4, 2, [0.0, 0.0, 1.0, 0.0], dyn,
+                     PlayerObjective(1, stage, terminal))
+player2 = PlayerSpec(2, 4, 2, [5.0, 0.0, -1.0, π], dyn,
+                     PlayerObjective(2, stage, terminal))
+
+game = PDGNEProblem([player1, player2], [col], 3.0, 0.1)
+sol  = solve(game, iLQGames())
+```
+
+## Package Architecture
+
+```
+DifferentialGames.jl          ← umbrella (re-exports everything)
+├── DifferentialGamesBase.jl  ← problem types, dynamics, costs, constraints,
+│                                solution interface, inverse game framework
+└── DifferentialGamesBaseSolvers.jl  ← FNELQ, iLQGames, ALGAMES
+```
+
+This structure lets downstream packages depend only on what they need: solver authors depend on `DifferentialGamesBase`; end users load `DifferentialGames`.
+
 ## Development Status
-### Currently Implemented:
 
-- ✅ Game problem specification (GameProblem, LQGameProblem)
-- ✅ Solution interface (GameSolution, Trajectory)
+### Implemented
+
+- ✅ Game problem specification (`GameProblem`, `LQGameProblem`, `PDGNEProblem`)
+- ✅ Player-based API (`PlayerSpec`, `PlayerObjective`)
+- ✅ Constraint system (private bounds, shared proximity, general nonlinear)
+- ✅ Solution interface (`GNEPSolution`, `Trajectory`, feedback/open-loop strategies)
+- ✅ Trajectory expansion (linearization + quadraticization for iterative solvers)
 - ✅ Discrete-time feedback Nash equilibrium (FNELQ)
-- ✅ Solver capability system
-- ✅ Warmstart support
+- ✅ Iterative LQ games (iLQGames)
+- ✅ Augmented Lagrangian games (ALGAMES)
+- ✅ Inverse game problem specification (`InverseGameProblem`, observation models, solver wrapper interface)
 
-### In Progress:
+### In Progress
 
+- 🚧 Inverse game solvers (MONGOOSE EnKF approach)
 - 🚧 Open-loop Nash equilibrium solvers
-- 🚧 Iterative LQ games (iLQGames)
-- 🚧 Sampling-based methods (JAGUAR, see [DynamicPlanning.jl](https://github.com/JuliaDifferentialGames/DynamicPlanning.jl))
-- 🚧 Callback system for monitoring
-- 🚧 Inverse game theory algorithms
+- 🚧 Callback/logging system
 
-### Planned:
+### Planned
 
-- 📋 Stackelberg games (leader-follower)
+- 📋 Stackelberg (leader-follower) games
 - 📋 Stochastic differential games
 - 📋 Mean field games
 - 📋 Learning-based solvers (MADDPG, MAPPO)
-- 📋 Visualization tools
 - 📋 Benchmark suite
-
-## Architecture
-
-The package is organized into modular components:
-```
-DifferentialGames.jl/
-├── DifferentialGamesBase.jl      # Core problem types and interfaces
-├── DifferentialGamesSolvers.jl    # Numerical solvers
-```
-This modular structure allows users to depend only on the components they need.
-
 
 ## Contributing
 
-Contributions are welcome! The package is structured to make adding new algorithms straightforward:
+To add a new solver:
 
-- [ ] Define your solver struct inheriting from ```GameSolver```
-- [ ] Implement ```solver_capabilities(::Type{YourSolver})``` to declare supported problem types
-- [ ] Implement ```_solve(game::GameProblem, solver::YourSolver, warmstart, verbose)```
-- [ ] Add tests comparing against known solutions or published benchmarks
-- [ ] Submit a pull request
+1. Define your solver struct inheriting from `GameSolver`
+2. Implement `solver_capabilities(::Type{YourSolver})` to declare supported game types
+3. Implement `_solve(game, solver, warmstart, verbose)` returning a `GNEPSolution`
+4. Add tests comparing against known solutions or published benchmarks
 
-See [FNELQ](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/FNELQ) as a reference implementation.
-
-## License
-MIT License - see LICENSE file for details.
+See [FNELQ](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/FNELQ) as a reference implementation and [ExampleSolver](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/ExampleSolver) as a minimal template.
 
 ## Acknowledgments
+
 This package follows the design principles of the SciML ecosystem and draws inspiration from:
 
-DifferentialEquations.jl for the solve interface
-Optimization.jl for algorithm dispatch patterns
-TrajectoryOptimization.jl for trajectory representations
-iLQGames.jl for interface inspiration and for algorithm implementation 
+- [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) — the `solve` interface pattern
+- [TrajectoryOptimization.jl](https://github.com/RoboticExplorationLab/TrajectoryOptimization.jl) — trajectory representations
+- [iLQGames.jl](https://github.com/lassepe/iLQGames.jl) — algorithm inspiration
+
+## License
+
+MIT License — see LICENSE file for details.
 
 ## Disclosure of Generative AI Usage
 
-Generative AI, Claude Sonnet 4.5, was used in the creation of this library as a programming aid including guided code generation, assistance with performance optimization, and for assistance in writing documentation. All code and documentation included in this repository, whether written by the author(s) or generative AI, has been reviewed by the author(s) for accuracy and has completed a verification process upon release.
+Generative AI (Claude Sonnet 4.5/4.6) was used in the creation of this library as a programming aid including guided code generation, assistance with performance optimization, and documentation. All code and documentation has been reviewed by the author(s) for accuracy.
