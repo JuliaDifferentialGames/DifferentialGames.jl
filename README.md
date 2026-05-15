@@ -1,6 +1,9 @@
 # DifferentialGames.jl
 
 [![CI](https://github.com/JuliaDifferentialGames/DifferentialGames.jl/actions/workflows/CI.yml/badge.svg?branch=main)](https://github.com/JuliaDifferentialGames/DifferentialGames.jl/actions/workflows/CI.yml)
+[![Docs Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://JuliaDifferentialGames.github.io/DifferentialGames.jl/stable)
+[![Docs Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaDifferentialGames.github.io/DifferentialGames.jl/dev)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
 
 A Julia ecosystem for solving N-player differential games using numerical methods, following the SciML interface conventions.
@@ -83,8 +86,7 @@ This structure lets downstream packages depend only on what they need: solver au
 
 ### In Progress
 
-- 🚧 Inverse game solvers (MONGOOSE EnKF approach)
-- 🚧 Open-loop Nash equilibrium solvers
+- 🚧 Inverse game solvers 
 - 🚧 Callback/logging system
 
 ### Planned
@@ -106,7 +108,7 @@ To add a new solver:
 
 See [FNELQ](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/FNELQ) as a reference implementation and [ExampleSolver](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/ExampleSolver) as a minimal template.
 
-## Acknowledgments
+## Inspiration
 
 This package follows the design principles of the SciML ecosystem and draws inspiration from:
 
@@ -121,3 +123,7 @@ MIT License — see LICENSE file for details.
 ## Disclosure of Generative AI Usage
 
 Generative AI (Claude Sonnet 4.5/4.6) was used in the creation of this library as a programming aid including guided code generation, assistance with performance optimization, and documentation. All code and documentation has been reviewed by the author(s) for accuracy.
+
+## Acknowledgments
+
+Bennet Outland thanks the Department of War Science, Math, and Research for Transformation (SMART) Scholarship for academic funding. Outland dedicates his contribution S.D.G.

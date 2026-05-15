@@ -4,7 +4,7 @@ Contributions are welcome. This page covers how to set up a development environm
 
 ## Reporting Issues
 
-Please file bugs and feature requests on the [GitHub issue tracker](https://github.com/BennetOutland/DifferentialGames.jl/issues). Include:
+Please file bugs and feature requests on the [GitHub issue tracker](https://github.com/JuliaDifferentialGames/DifferentialGames.jl/issues). Include:
 
 - Julia version (`julia --version`)
 - Package version (`Pkg.status("DifferentialGames")`)
@@ -15,9 +15,9 @@ Please file bugs and feature requests on the [GitHub issue tracker](https://gith
 DifferentialGames.jl is an umbrella package; most code lives in the sub-packages. Clone all three:
 
 ```bash
-git clone https://github.com/BennetOutland/DifferentialGames.jl
-git clone https://github.com/BennetOutland/DifferentialGamesBase.jl
-git clone https://github.com/BennetOutland/DifferentialGamesBaseSolvers.jl
+git clone https://github.com/JuliaDifferentialGames/DifferentialGames.jl
+git clone https://github.com/JuliaDifferentialGames/DifferentialGamesBase.jl
+git clone https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl
 ```
 
 Then dev them into a shared environment:
