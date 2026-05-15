@@ -1,5 +1,2 @@
 [deps]
-DifferentialGames = "497f78f8-f326-11f0-3aad-a3ebf6911431"
-DifferentialGamesBase = "a9dd1e63-b4ad-4579-bca8-3a609f3d87b9"
-DifferentialGamesBaseSolvers = "b83b0c57-42fa-43ab-a182-d5be40f43772"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
