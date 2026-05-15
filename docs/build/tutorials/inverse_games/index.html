@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>Inverse Games · DifferentialGames.jl</title><meta name="title" content="Inverse Games · DifferentialGames.jl"/><meta property="og:title" content="Inverse Games · DifferentialGames.jl"/><meta property="twitter:title" content="Inverse Games · DifferentialGames.jl"/><meta name="description" content="Documentation for DifferentialGames.jl."/><meta property="og:description" content="Documentation for DifferentialGames.jl."/><meta property="twitter:description" content="Documentation for DifferentialGames.jl."/><meta property="og:url" content="https://JuliaDifferentialGames.github.io/DifferentialGames.jl/tutorials/inverse_games/"/><meta property="twitter:url" content="https://JuliaDifferentialGames.github.io/DifferentialGames.jl/tutorials/inverse_games/"/><link rel="canonical" href="https://JuliaDifferentialGames.github.io/DifferentialGames.jl/tutorials/inverse_games/"/><script data-outdated-warner src="../../assets/warner.js"></script><link href="https://cdnjs.cloudflare.com/ajax/libs/lato-font/3.0.0/css/lato-font.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/juliamono/0.050/juliamono.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.8/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL="../.."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../../assets/documenter.js"></script><script src="../../search_index.js"></script><script src="../../siteinfo.js"></script><script src="../../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-mocha.css" data-theme-name="catppuccin-mocha"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-macchiato.css" data-theme-name="catppuccin-macchiato"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-frappe.css" data-theme-name="catppuccin-frappe"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/catppuccin-latte.css" data-theme-name="catppuccin-latte"/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit"><a href="../../">DifferentialGames.jl</a></span></div><button class="docs-search-query input is-rounded is-small is-clickable my-2 mx-auto py-1 px-2" id="documenter-search-query">Search docs (Ctrl + /)</button><ul class="docs-menu"><li><a class="tocitem" href="../../">Home</a></li><li><input class="collapse-toggle" id="menuitem-2" type="checkbox"/><label class="tocitem" for="menuitem-2"><span class="docs-label">Getting Started</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../getting_started/installation/">Installation</a></li><li><a class="tocitem" href="../../getting_started/first_example/">First Example</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-3" type="checkbox" checked/><label class="tocitem" for="menuitem-3"><span class="docs-label">Tutorials</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../lq_games/">LQ Games</a></li><li><a class="tocitem" href="../nonlinear_games/">Nonlinear Games</a></li><li><a class="tocitem" href="../constrained_games/">Constrained Games</a></li><li class="is-active"><a class="tocitem" href>Inverse Games</a><ul class="internal"><li><a class="tocitem" href="#Framework"><span>Framework</span></a></li><li><a class="tocitem" href="#Example:-Recovering-a-Cost-Weight-from-a-Trajectory"><span>Example: Recovering a Cost Weight from a Trajectory</span></a></li><li><a class="tocitem" href="#Observation-Data"><span>Observation Data</span></a></li><li><a class="tocitem" href="#Implementing-an-Inverse-Solver"><span>Implementing an Inverse Solver</span></a></li><li><a class="tocitem" href="#Observation-Models"><span>Observation Models</span></a></li><li><a class="tocitem" href="#Further-Reading"><span>Further Reading</span></a></li></ul></li></ul></li><li><input class="collapse-toggle" id="menuitem-4" type="checkbox"/><label class="tocitem" for="menuitem-4"><span class="docs-label">Basics</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../basics/overview/">Overview &amp; Architecture</a></li><li><a class="tocitem" href="../../basics/problem_interface/">Building Problems</a></li><li><a class="tocitem" href="../../basics/solutions/">Working with Solutions</a></li><li><a class="tocitem" href="../../basics/solver_options/">Common Solver Options</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-5" type="checkbox"/><label class="tocitem" for="menuitem-5"><span class="docs-label">Problem Types</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../problem_types/lq_game/">LQGameProblem</a></li><li><a class="tocitem" href="../../problem_types/ltv_lq_game/">LTVLQGameProblem</a></li><li><a class="tocitem" href="../../problem_types/pdgnep/">PDGNEProblem</a></li><li><a class="tocitem" href="../../problem_types/inverse_game/">InverseGameProblem</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-6" type="checkbox"/><label class="tocitem" for="menuitem-6"><span class="docs-label">Solver Algorithms</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../solvers/fnelq/">FNELQ</a></li><li><a class="tocitem" href="../../solvers/ilqgames/">iLQGames</a></li><li><a class="tocitem" href="../../solvers/algames/">ALGAMES</a></li></ul></li><li><input class="collapse-toggle" id="menuitem-7" type="checkbox"/><label class="tocitem" for="menuitem-7"><span class="docs-label">API Reference</span><i class="docs-chevron"></i></label><ul class="collapsed"><li><a class="tocitem" href="../../api/problems/">Problem Types</a></li><li><a class="tocitem" href="../../api/dynamics/">Dynamics</a></li><li><a class="tocitem" href="../../api/costs/">Costs &amp; Objectives</a></li><li><a class="tocitem" href="../../api/constraints/">Constraints</a></li><li><a class="tocitem" href="../../api/solutions/">Solutions</a></li><li><a class="tocitem" href="../../api/solver_interface/">Solver Interface</a></li><li><a class="tocitem" href="../../api/inverse_games/">Inverse Games</a></li></ul></li><li><a class="tocitem" href="../../contributing/">Contributing</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><a class="docs-sidebar-button docs-navbar-link fa-solid fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a><nav class="breadcrumb"><ul class="is-hidden-mobile"><li><a class="is-disabled">Tutorials</a></li><li class="is-active"><a href>Inverse Games</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>Inverse Games</a></li></ul></nav><div class="docs-right"><a class="docs-navbar-link" href="https://github.com/JuliaDifferentialGames/DifferentialGames.jl" title="View the repository on GitHub"><span class="docs-icon fa-brands"></span><span class="docs-label is-hidden-touch">GitHub</span></a><a class="docs-navbar-link" href="https://github.com/JuliaDifferentialGames/DifferentialGames.jl/blob/main/docs/src/tutorials/inverse_games.md" title="Edit source on GitHub"><span class="docs-icon fa-solid"></span></a><a class="docs-settings-button docs-navbar-link fa-solid fa-gear" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-article-toggle-button fa-solid fa-chevron-up" id="documenter-article-toggle-button" href="javascript:;" title="Collapse all docstrings"></a></div></header><article class="content" id="documenter-page"><h1 id="Inverse-Games"><a class="docs-heading-anchor" href="#Inverse-Games">Inverse Games</a><a id="Inverse-Games-1"></a><a class="docs-heading-anchor-permalink" href="#Inverse-Games" title="Permalink"></a></h1><p><strong>Inverse game theory</strong> asks: given observations of agents behaving according to a Nash equilibrium, what are their cost functions?</p><p>This is the dual of the forward problem. Instead of computing a Nash equilibrium given known objectives, we infer unknown objectives from trajectory data. Applications include:</p><ul><li><strong>Intent prediction</strong> for autonomous vehicles</li><li><strong>Social force estimation</strong> in pedestrian models</li><li><strong>Preference learning</strong> from expert demonstrations</li></ul><h2 id="Framework"><a class="docs-heading-anchor" href="#Framework">Framework</a><a id="Framework-1"></a><a class="docs-heading-anchor-permalink" href="#Framework" title="Permalink"></a></h2><p>DifferentialGamesBase provides the infrastructure for inverse games. Concrete inverse solvers (e.g., an EnKF-based MONGOOSE solver) are implemented separately and plug into this interface.</p><p>An <code>InverseGameProblem</code> encodes:</p><ul><li>The dynamics and structure of the game (same as a forward problem)</li><li>Which players have <strong>known</strong> objectives and which are <strong>unknown</strong></li><li>An <strong>observation model</strong> mapping joint states to measurements</li><li>A <strong>forward solver wrapper</strong> used to simulate hypothesized equilibria</li></ul><h2 id="Example:-Recovering-a-Cost-Weight-from-a-Trajectory"><a class="docs-heading-anchor" href="#Example:-Recovering-a-Cost-Weight-from-a-Trajectory">Example: Recovering a Cost Weight from a Trajectory</a><a id="Example:-Recovering-a-Cost-Weight-from-a-Trajectory-1"></a><a class="docs-heading-anchor-permalink" href="#Example:-Recovering-a-Cost-Weight-from-a-Trajectory" title="Permalink"></a></h2><p>We set up a scenario where player 2&#39;s cost weight is unknown and must be recovered from observations of a joint trajectory.</p><pre><code class="language-julia hljs">using DifferentialGames, LinearAlgebra
+
+# ── Define the game structure ──────────────────────────────────
+dyn = (xi, ui, p, t) -&gt; [xi[2]; ui[1]]   # double integrator
+
+# Player 1: known cost (ego agent)
+stage1    = DiagonalLQStageCost([1.0, 0.1], [0.01])
+terminal1 = DiagonalLQTerminalCost([10.0, 1.0])
+obj1      = PlayerObjective(1, stage1, terminal1)
+
+player1 = PlayerSpec(1, 2, 1, [1.0, 0.0], dyn, obj1)
+
+# Player 2: unknown cost (the agent we&#39;re observing)
+# We know the form but not the weights — the solver must infer them.
+player2 = PlayerSpec(2, 2, 1, [-1.0, 0.0], dyn,
+                     PlayerObjective(2,    # placeholder — will be replaced during inference
+                         DiagonalLQStageCost([1.0, 0.1], [0.01]),
+                         DiagonalLQTerminalCost([10.0, 1.0])))
+
+# ── Knowledge encoding ────────────────────────────────────────
+knowledge = [
+    KnownObjective(obj1),     # player 1&#39;s objective is fixed
+    UnknownObjective(),        # player 2&#39;s objective must be inferred
+]
+
+# ── Observation model ─────────────────────────────────────────
+# Full-state observation (noiseless): observe the joint state directly
+obs_model = FullStateObservation(4)   # 4 = n1 + n2 = 2 + 2
+
+# Alternatively, noisy partial observation:
+# obs_model = NoisyObservation(x -&gt; x[1:2], 1e-3 * I(2), 2)
+
+# ── Forward solver wrapper ────────────────────────────────────
+# The inverse solver calls predict_next_state inside its inference loop.
+# Implement this using any forward solver.
+
+struct FNELQWrapper &lt;: ForwardSolverWrapper
+    # cache warmstart data here if needed
+end
+
+function DifferentialGames.predict_next_state(
+    ::FNELQWrapper,
+    prob::GameProblem{T},
+    x0::AbstractVector{T}
+) where {T}
+    sol = solve(prob, FNELQ())
+    return first_step_state(sol)
+end
+
+function DifferentialGames.solve_forward(
+    ::FNELQWrapper,
+    prob::GameProblem{T},
+    x0::AbstractVector{T}
+) where {T}
+    return solve(prob, FNELQ())
+end
+
+# ── Inverse problem ───────────────────────────────────────────
+inv_prob = InversePDGNEProblem(
+    [player1, player2],
+    knowledge,
+    obs_model,
+    FNELQWrapper(),
+    3.0,   # tf
+    0.1    # dt
+)
+
+println(&quot;Unknown players: &quot;, unknown_players(inv_prob))     # [2]
+println(&quot;Known players:   &quot;, known_players(inv_prob))       # [1]
+
+# ── Check as_forward_problem ──────────────────────────────────
+# Substitute a hypothesized objective for player 2 and solve forward
+hyp_obj2 = PlayerObjective(2,
+    DiagonalLQStageCost([2.0, 0.5], [0.05]),   # a different weight hypothesis
+    DiagonalLQTerminalCost([5.0, 1.0]))
+
+fwd = as_forward_problem(inv_prob, Dict(2 =&gt; hyp_obj2))
+fwd_sol = solve(fwd, FNELQ())
+println(&quot;Forward solution under hypothesis: J₂ = &quot;, get_cost(fwd_sol, 2))</code></pre><h2 id="Observation-Data"><a class="docs-heading-anchor" href="#Observation-Data">Observation Data</a><a id="Observation-Data-1"></a><a class="docs-heading-anchor-permalink" href="#Observation-Data" title="Permalink"></a></h2><p>Use <code>ObservationData</code> to accumulate observed states over time:</p><pre><code class="language-julia hljs">obs_data = ObservationData{Float64}()
+
+# Simulate or record observations
+for t in 0.0:0.1:2.9
+    x_observed = randn(4)   # replace with real measurements
+    push_observation!(obs_data, x_observed, t)
+end
+
+println(&quot;Observations collected: &quot;, length(obs_data))
+
+# Access stored data
+x_at_t0 = obs_data.states[1]
+t_at_0  = obs_data.times[1]</code></pre><h2 id="Implementing-an-Inverse-Solver"><a class="docs-heading-anchor" href="#Implementing-an-Inverse-Solver">Implementing an Inverse Solver</a><a id="Implementing-an-Inverse-Solver-1"></a><a class="docs-heading-anchor-permalink" href="#Implementing-an-Inverse-Solver" title="Permalink"></a></h2><p>To implement an inverse solver, use <code>InverseSolverState</code> to hold mutable state and return an <code>InverseGameSolution</code>:</p><pre><code class="language-julia hljs"># Skeleton of a batch inverse solver (e.g., STLS or gradient-based)
+function my_inverse_solve(
+    prob::InverseGameProblem{T},
+    obs_data::ObservationData{T};
+    n_weights::Int = 3
+) where {T}
+    state  = InverseSolverState{T}()
+    t_start = time()
+
+    # ... inference loop ...
+    recovered_weights = Dict{Int, Vector{T}}(2 =&gt; zeros(T, n_weights))
+
+    return InverseGameSolution(
+        prob,
+        recovered_weights,                                 # final weights
+        Dict{Int, Matrix{T}}(2 =&gt; zeros(T, n_weights, 0)), # weight history
+        Dict{Int, Array{T,3}}(),                           # ensemble history
+        nothing,                                           # forward solution
+        true,                                              # converged
+        time() - t_start,
+        Dict{Symbol, Any}()
+    )
+end</code></pre><h2 id="Observation-Models"><a class="docs-heading-anchor" href="#Observation-Models">Observation Models</a><a id="Observation-Models-1"></a><a class="docs-heading-anchor-permalink" href="#Observation-Models" title="Permalink"></a></h2><table><tr><th style="text-align: right">Model</th><th style="text-align: right">Constructor</th><th style="text-align: right">Notes</th></tr><tr><td style="text-align: right">Full state (noiseless)</td><td style="text-align: right"><code>FullStateObservation(n_total)</code></td><td style="text-align: right">Offline / batch settings</td></tr><tr><td style="text-align: right">Additive Gaussian noise</td><td style="text-align: right"><code>NoisyObservation(h, R, obs_dim)</code></td><td style="text-align: right">Online / sequential inference</td></tr></table><pre><code class="language-julia hljs"># Range + bearing measurement (4D output)
+function h_range_bearing(x)
+    δx, δy = x[1] - x[3], x[2] - x[4]   # relative position
+    r = sqrt(δx^2 + δy^2) + 1e-8
+    return [r; δx/r; δy/r; atan(δy, δx)]
+end
+R_meas = Diagonal(1e-4 * ones(4))
+obs = NoisyObservation(h_range_bearing, Matrix(R_meas), 4)</code></pre><h2 id="Further-Reading"><a class="docs-heading-anchor" href="#Further-Reading">Further Reading</a><a id="Further-Reading-1"></a><a class="docs-heading-anchor-permalink" href="#Further-Reading" title="Permalink"></a></h2><ul><li><a href="../../problem_types/inverse_game/"><code>InverseGameProblem</code> reference</a> — full API for inverse problem types</li><li><a href="../../api/inverse_games/">Inverse Games API reference</a> — complete docstring reference</li></ul></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../constrained_games/">« Constrained Games</a><a class="docs-footer-nextpage" href="../../basics/overview/">Overview &amp; Architecture »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="auto">Automatic (OS)</option><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option><option value="catppuccin-latte">catppuccin-latte</option><option value="catppuccin-frappe">catppuccin-frappe</option><option value="catppuccin-macchiato">catppuccin-macchiato</option><option value="catppuccin-mocha">catppuccin-mocha</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 1.17.0 on <span class="colophon-date" title="Friday 15 May 2026 11:48">Friday 15 May 2026</span>. Using Julia version 1.12.6.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
