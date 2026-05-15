@@ -24,7 +24,7 @@ jobs:
       matrix:
         version:
           - '1.11'
-          - '1.6'
+          - '1.10'
           - 'pre'
         os:
           - ubuntu-latest
@@ -39,3 +39,30 @@ jobs:
       - uses: julia-actions/cache@v2
       - uses: julia-actions/julia-buildpkg@v1
       - uses: julia-actions/julia-runtest@v1
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      statuses: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: julia-actions/setup-julia@v2
+        with:
+          version: '1'
+      - uses: julia-actions/cache@v2
+      - name: Install docs dependencies
+        run: julia --project=docs -e '
+          using Pkg
+          Pkg.add([
+            PackageSpec(url="https://github.com/JuliaDifferentialGames/DifferentialGamesBase.jl"),
+            PackageSpec(url="https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl"),
+          ])
+          Pkg.develop(PackageSpec(path="."))
+          Pkg.instantiate()'
+      - name: Build and deploy docs
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: julia --project=docs docs/make.jl
