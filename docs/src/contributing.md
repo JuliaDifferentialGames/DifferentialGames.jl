@@ -82,6 +82,8 @@ New solvers belong in `DifferentialGamesBaseSolvers.jl`. The required steps are:
 5. Include the test file in `test/runtests.jl`.
 6. Add a documentation page under `DifferentialGames.jl/docs/src/solvers/`.
 
+Note, the above code does not need to be merged in with `DifferentialGamesBaseSolvers.jl` if you wish to keep it in your own repo. You are still free to add the documenation to `DifferentialGamesBaseSolvers.jl` to improve the visibility of your repo. 
+
 ## Adding a New Problem Type
 
 New problem types belong in `DifferentialGamesBase.jl`. A problem type must:

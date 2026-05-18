@@ -59,55 +59,6 @@ game = PDGNEProblem([player1, player2], [col], 3.0, 0.1)
 sol  = solve(game, iLQGames())
 ```
 
-## Package Architecture
-
-```
-DifferentialGames.jl          ← umbrella (re-exports everything)
-├── DifferentialGamesBase.jl  ← problem types, dynamics, costs, constraints,
-│                                solution interface, inverse game framework
-└── DifferentialGamesBaseSolvers.jl  ← FNELQ, iLQGames, ALGAMES
-```
-
-This structure lets downstream packages depend only on what they need: solver authors depend on `DifferentialGamesBase`; end users load `DifferentialGames`.
-
-## Development Status
-
-### Implemented
-
-- ✅ Game problem specification (`GameProblem`, `LQGameProblem`, `PDGNEProblem`)
-- ✅ Player-based API (`PlayerSpec`, `PlayerObjective`)
-- ✅ Constraint system (private bounds, shared proximity, general nonlinear)
-- ✅ Solution interface (`GNEPSolution`, `Trajectory`, feedback/open-loop strategies)
-- ✅ Trajectory expansion (linearization + quadraticization for iterative solvers)
-- ✅ Discrete-time feedback Nash equilibrium (FNELQ)
-- ✅ Iterative LQ games (iLQGames)
-- ✅ Augmented Lagrangian games (ALGAMES)
-- ✅ Inverse game problem specification (`InverseGameProblem`, observation models, solver wrapper interface)
-
-### In Progress
-
-- 🚧 Inverse game solvers 
-- 🚧 Callback/logging system
-
-### Planned
-
-- 📋 Stackelberg (leader-follower) games
-- 📋 Stochastic differential games
-- 📋 Mean field games
-- 📋 Learning-based solvers (MADDPG, MAPPO)
-- 📋 Benchmark suite
-
-## Contributing
-
-To add a new solver:
-
-1. Define your solver struct inheriting from `GameSolver`
-2. Implement `solver_capabilities(::Type{YourSolver})` to declare supported game types
-3. Implement `_solve(game, solver, warmstart, verbose)` returning a `GNEPSolution`
-4. Add tests comparing against known solutions or published benchmarks
-
-See [FNELQ](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/FNELQ) as a reference implementation and [ExampleSolver](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl/tree/main/src/solvers/ExampleSolver) as a minimal template.
-
 ## Inspiration
 
 This package follows the design principles of the SciML ecosystem and draws inspiration from:

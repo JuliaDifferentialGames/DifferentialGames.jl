@@ -1,37 +1,36 @@
 # DifferentialGames.jl
 
-**DifferentialGames.jl** is a Julia package for computing Nash equilibria in N-player differential games. It provides a unified interface — modelled on the [SciML](https://sciml.ai) ecosystem — for specifying multi-agent optimal control problems, swapping numerical solvers, and extracting solutions.
+**DifferentialGames.jl** is a Julia package for computing Nash equilibria in N-player differential games. It provides a unified interface, modelled on the [SciML](https://sciml.ai) ecosystem, for defining multi-agent control problems while providing a unified interface for applying different solvers.
 
 !!! warning "Work in progress"
     The API is stabilizing. Breaking changes may occur before v1.0.0.
 
 ## Statement of Need
 
-Differential games model situations where multiple decision-makers (players) each optimize their own objective subject to shared dynamics. They arise across:
+Differential games model situations where multiple decision-makers (players or agents) each optimize an objective with respect to constraints that may involve the decision variables of other agents. They arise across:
 
 - **Autonomous vehicles** — modeling interactions at intersections, merging, and overtaking
 - **Robotics** — multi-robot coordination, pursuit-evasion, formation control
 - **Aerospace** — spacecraft rendezvous, pursuit-guidance, air-traffic separation
 - **Economics** — dynamic oligopoly, resource extraction, mechanism design
 
-Computing Nash equilibria in these settings requires solving coupled optimality conditions that grow exponentially in complexity with player count and horizon length. Existing software is either problem-specific (hardcoded to a single formulation), research-grade (no stable API), or restricted to small linear-quadratic problems.
+The class of problems primarily considered for this package are Nash Equilibrium Problems (NEPs). There is a significant lack of open source implementations of many differential game solvers and no common standard across the field. If software does exist, it is generally for a single method developed in research (no stable API or a very limited API) or does not allow easy extension for new solvers.
 
 **DifferentialGames.jl fills this gap.** It provides:
 
 - A composable, type-stable problem specification covering linear, nonlinear, constrained, and inverse games
 - A common `solve(game, solver)` interface so algorithms can be swapped without rewriting the problem
-- A growing library of numerical solvers (FNELQ, iLQGames, ALGAMES)
-- An inverse game framework for cost recovery from observed trajectories
+- A growing library of modern numerical solvers 
 
 ### Relation to Existing Work
 
-| Package | Language | LQ | Nonlinear | Constraints | Inverse | Interface |
+| Package | Language | LQ | Nonlinear | Constraints | Inverse | Players|
 |---------|----------|-----|-----------|-------------|---------|-----------|
-| **DifferentialGames.jl** | Julia | ✓ | ✓ | ✓ | ✓ | SciML |
-| [iLQGames.jl](https://github.com/lassepe/iLQGames.jl) | Julia | ✓ | ✓ | ✗ | ✗ | custom |
-| [ALGAMES.jl](https://github.com/simon-lc/Algames.jl) | Julia | ✓ | ✓ | ✓ | ✗ | custom |
-| [ilqgames](https://github.com/HJReachability/ilqgames) | C++ | ✓ | ✓ | ✗ | ✗ | custom |
-| [OpenSpiel](https://github.com/google-deepmind/open_spiel) | Python | ✗ | ✗ | ✗ | ✗ | RL-focused |
+| **DifferentialGames.jl** | Julia | ✓ | ✓ | ✓ | ✓ | N |
+| [iLQGames.jl](https://github.com/lassepe/iLQGames.jl) | Julia | ✓ | ✓ | ✗ | ✗ | N |
+| [ALGAMES.jl](https://github.com/simon-lc/Algames.jl) | Julia | ✓ | ✓ | ✓ | ✗ | N |
+| [ilqgames](https://github.com/HJReachability/ilqgames) | C++ | ✓ | ✓ | ✗ | ✗ | N |
+| [Nashpy](https://github.com/drvinceknight/Nashpy) | Python | ✓ | ✓ | ✓ | ✗ | 2 |
 
 DifferentialGames.jl is inspired by the design of [TrajectoryOptimization.jl](https://github.com/RoboticExplorationLab/TrajectoryOptimization.jl) (problem/solver separation) and the [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) ecosystem (unified `solve` interface, composable problem types).
 
