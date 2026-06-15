@@ -1,7 +1,6 @@
 # Inverse Games API
 
-Complete reference for all inverse game types and functions. See the
-[Inverse Games Tutorial](../tutorials/inverse_games.md) for a worked example.
+Complete reference for all inverse game types and functions.
 
 ## Problem Types
 

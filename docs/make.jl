@@ -1,3 +1,13 @@
+# Load local packages - add parent directory and sibling packages to LOAD_PATH
+const parent_dir = dirname(@__DIR__)
+const base_dir = dirname(parent_dir)
+
+for dir in [parent_dir, joinpath(base_dir, "DifferentialGamesBase.jl"), joinpath(base_dir, "DifferentialGamesBaseSolvers.jl")]
+    if !(dir in LOAD_PATH)
+        push!(LOAD_PATH, dir)
+    end
+end
+
 using Documenter
 using DifferentialGames
 using DifferentialGamesBase
@@ -38,7 +48,6 @@ makedocs(
             "LQ Games"              => "tutorials/lq_games.md",
             "Nonlinear Games"       => "tutorials/nonlinear_games.md",
             "Constrained Games"     => "tutorials/constrained_games.md",
-            "Inverse Games"         => "tutorials/inverse_games.md",
         ],
         "Basics" => [
             "Overview & Architecture" => "basics/overview.md",

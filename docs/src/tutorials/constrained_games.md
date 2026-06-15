@@ -159,4 +159,3 @@ If ALGAMES fails to converge, try:
 
 - [ALGAMES solver reference](../solvers/algames.md) — full option list and algorithm details
 - [Constraint API reference](../api/constraints.md) — all constraint types and constructors
-- [Inverse Games tutorial](inverse_games.md) — recovering costs from observations
