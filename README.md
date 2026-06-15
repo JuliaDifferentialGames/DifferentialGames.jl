@@ -4,6 +4,7 @@
 [![Docs](https://img.shields.io/badge/docs-dev-blue.svg)](https://JuliaDifferentialGames.github.io/DifferentialGames.jl/dev)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![SciML Code Style](https://img.shields.io/static/v1?label=code%20style&message=SciML&color=9558b2&labelColor=389826)](https://github.com/SciML/SciMLStyle)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20432309.svg)](https://doi.org/10.5281/zenodo.20432309)
 
 A Julia ecosystem for solving N-player differential games using numerical methods, following the SciML interface conventions.
 
@@ -58,14 +59,6 @@ game = PDGNEProblem([player1, player2], [col], 3.0, 0.1)
 sol  = solve(game, iLQGames())
 ```
 
-## Inspiration
-
-This package follows the design principles of the SciML ecosystem and draws inspiration from:
-
-- [DifferentialEquations.jl](https://github.com/SciML/DifferentialEquations.jl) — the `solve` interface pattern
-- [TrajectoryOptimization.jl](https://github.com/RoboticExplorationLab/TrajectoryOptimization.jl) — trajectory representations
-- [iLQGames.jl](https://github.com/lassepe/iLQGames.jl) — algorithm inspiration
-
 ## License
 
 MIT License — see LICENSE file for details.
@@ -77,3 +70,17 @@ Generative AI was used in the creation of this library as a programming aid incl
 ## Acknowledgments
 
 Bennet Outland thanks the Department of War Science, Math, and Research for Transformation (SMART) Scholarship for academic funding. Outland dedicates his contribution S.D.G.
+
+## Citation
+
+If you used DifferentialGames.jl in your work, please cite using
+```
+@misc{outland_2026,
+  author       = {Outland, Bennet},
+  title        = {DifferentialGames.jl},
+  year         = {2026},
+  publisher    = {Zenodo},
+  doi          = {10.5281/zenodo.20432309},
+  url          = {https://doi.org/10.5281/zenodo.20432309},
+}
+```
