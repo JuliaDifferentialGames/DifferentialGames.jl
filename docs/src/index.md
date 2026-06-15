@@ -73,6 +73,6 @@ println("J₂ = ", get_cost(sol, 2))
 - **[Tutorials](tutorials/lq_games.md)** — worked examples from spacecraft to autonomous vehicles
 - **[Basics](basics/overview.md)** — the problem/solver/solution pattern
 - **[Problem Types](problem_types/lq_game.md)** — reference for each game formulation
-- **[Solver Algorithms](solvers/fnelq.md)** — when to use each solver and what options it accepts
+- **[Solver Algorithms](solvers/fnelq.md)** — FNELQ, iLQGames, ALGAMES, InverseLQGames, LIBR, RHN, and YiPavel
 - **[API Reference](api/problems.md)** — complete docstring reference
 - **[Contributing](contributing.md)** — how to add solvers, report bugs, and get support

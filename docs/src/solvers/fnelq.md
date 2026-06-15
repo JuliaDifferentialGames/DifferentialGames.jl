@@ -28,12 +28,33 @@ At each step the gains are found by simultaneously solving the N-player coupled 
 
 ```julia
 sol = solve(game, FNELQ())
+
+# With options:
+sol = solve(game, FNELQ(;
+    check_singularity = true,
+    rcond_threshold   = 1e-10,
+    regularization     = 0.0
+))
 ```
 
-FNELQ takes no tunable parameters — it is a direct solver with no iteration.
+## Solver Type Documentation
 
 ```@docs
 FNELQ
+```
+
+## Options
+
+| Option | Default | Description |
+|--------|---------|-------------|
+| `check_singularity` | `true` | Warn when the Nash gain matrix is ill-conditioned |
+| `rcond_threshold` | `1e-10` | Reciprocal condition number below which a warning is issued |
+| `regularization` | `0.0` | Tikhonov regularization added to the gain system |
+
+## Capabilities
+
+```@docs
+solver_capabilities(::Type{FNELQ})
 ```
 
 ## Applicable Problem Types
@@ -57,3 +78,7 @@ FNELQ is always the right choice when the problem is LQ. It does not iterate, do
 ## Complexity
 
 ``O(N \cdot N_{\text{steps}} \cdot n^3)`` where ``n`` is the total state dimension. The dominant cost is the per-step matrix solve for the Nash gains.
+
+## References
+
+The algorithm is based on the standard feedback Nash equilibrium solution for discrete-time LQ games. See also the implementation notes in [DifferentialGamesBaseSolvers.jl](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl).

@@ -20,12 +20,21 @@ sol = solve(game, iLQGames())
 
 # With options:
 sol = solve(game, iLQGames(;
-    max_iter  = 100,
-    ε_conv    = 1e-6,
-    α_min     = 1e-4,
-    verbose   = false,
+    max_iter          = 200,
+    ε_conv            = 0.05,
+    β                 = 0.5,
+    η_min             = 0.5^20,
+    max_state_step    = 1.0,
+    μ_init            = 1.0,
+    μ_max             = 1e6,
+    μ_scale           = 10.0,
+    μ_decay           = 0.5,
+    discretization    = ZOHDiscretization(),
+    verbose           = false,
 ))
 ```
+
+## Solver Type Documentation
 
 ```@docs
 iLQGames
@@ -35,10 +44,22 @@ iLQGames
 
 | Option | Default | Description |
 |--------|---------|-------------|
-| `max_iter` | `100` | Maximum number of outer iterations |
-| `ε_conv` | `1e-6` | Convergence threshold on ``\max_k \|x_k^{(j+1)} - x_k^{(j)}\|_\infty`` |
-| `α_min` | `1e-4` | Minimum line-search step size before aborting |
-| `verbose` | `false` | Print per-iteration log |
+| `max_iter` | `200` | Maximum number of outer iterations |
+| `ε_conv` | `0.05` | Trajectory-change convergence threshold |
+| `β` | `0.5` | Line search backtrack factor |
+| `η_min` | `0.5^20` | Minimum line search step |
+| `max_state_step` | `1.0` | Maximum state step accepted in line search |
+| `μ_init` | `1.0` | Initial S-regularization |
+| `μ_max` | `1e6` | Maximum regularization |
+| `μ_scale` | `10.0` | Regularization growth factor on ill-conditioning |
+| `μ_decay` | `0.5` | Regularization decay factor on accepted step |
+| `discretization` | `ZOHDiscretization()` | Method for auto-discretising continuous dynamics |
+
+## Capabilities
+
+```@docs
+solver_capabilities(::Type{iLQGames})
+```
 
 ## Applicable Problem Types
 
@@ -52,7 +73,9 @@ iLQGames
 
 ## Convergence
 
-iLQGames finds a **local** feedback Nash equilibrium. There is no guarantee of global optimality, and the solution found may depend on the initial strategy (zero by default). For nonlinear problems it is common to run from several random initializations and take the best.
+iLQGames finds a **local** feedback Nash equilibrium of successive LQ approximations. There is no guarantee of global optimality, and the solution found may depend on the initial strategy (zero by default). For nonlinear problems it is common to run from several random initializations and take the best.
+
+The primary output is a `FeedbackStrategy` from the last converged FNELQ solve, which constitutes a feedback Nash equilibrium of the LQ subgame built around the converged nominal trajectory (§IV-B of Fridovich-Keil et al. 2020).
 
 Convergence criterion:
 
@@ -65,3 +88,7 @@ Convergence criterion:
 - Dynamics and stage costs must be differentiable with respect to state and control. The solver uses `ForwardDiff.jl` for automatic differentiation; closures must be ForwardDiff-compatible (avoid type-specific branches or non-differentiable operations).
 - For **constrained** games, use [`ALGAMES`](algames.md) instead, optionally warmstarted from an iLQGames solution.
 - For **LQ** games, [`FNELQ`](fnelq.md) is faster (direct solver, no iteration).
+
+## References
+
+Fridovich-Keil, D., Ratner, E., Peters, L., Dragan, A. D., & Tomlin, C. J. (2020). *Efficient Iterative Linear-Quadratic Approximations for Nonlinear Multi-Player General-Sum Differential Games.* ICRA 2020. [arXiv:1909.04694](https://arxiv.org/abs/1909.04694)

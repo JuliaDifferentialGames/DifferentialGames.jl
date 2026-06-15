@@ -53,9 +53,13 @@ makedocs(
             "InverseGameProblem"     => "problem_types/inverse_game.md",
         ],
         "Solver Algorithms" => [
-            "FNELQ"    => "solvers/fnelq.md",
-            "iLQGames" => "solvers/ilqgames.md",
-            "ALGAMES"  => "solvers/algames.md",
+            "FNELQ"       => "solvers/fnelq.md",
+            "iLQGames"    => "solvers/ilqgames.md",
+            "ALGAMES"     => "solvers/algames.md",
+            "InverseLQGames" => "solvers/invlq.md",
+            "LIBR"        => "solvers/libr.md",
+            "RecedingHorizonNash" => "solvers/rhn.md",
+            "YiPavel"     => "solvers/yipavel.md",
         ],
         "API Reference" => [
             "Problem Types"      => "api/problems.md",

@@ -12,6 +12,8 @@ ALGAMES combines augmented Lagrangian constraint handling with a Newton-based in
 
 The result is an **open-loop** Nash equilibrium: each player commits to a full control sequence ``u_i = (u_i^0, \ldots, u_i^{N-1})`` simultaneously.
 
+With shared inequality constraints, the solver converges to a **Normalized Nash Equilibrium (NNE)** because identical dual-ascent updates enforce equal multipliers on shared constraints.
+
 ## Usage
 
 ```julia
@@ -19,17 +21,24 @@ sol = solve(game, ALGAMES())
 
 # With options:
 sol = solve(game, ALGAMES(;
-    max_outer  = 30,
-    max_inner  = 100,
-    ρ_init     = 1.0,
-    ρ_scale    = 10.0,
-    ρ_max      = 1e6,
-    ε_primal   = 1e-4,
-    ε_dual     = 1e-4,
-    reg        = 1e-3,
-    verbose    = false,
+    outer_iter  = 50,
+    ρ_init      = 1.0,
+    ρ_increase  = 10.0,
+    ρ_max       = 1e8,
+    inner_iter  = 10,
+    reg         = 1e-3,
+    ls_iter     = 20,
+    ls_beta     = 0.1,
+    ls_tau      = 0.5,
+    tol_opt     = 1e-4,
+    tol_dyn     = 1e-4,
+    tol_con     = 1e-3,
+    reset_duals = true,
+    verbose     = false,
 ))
 ```
+
+## Solver Type Documentation
 
 ```@docs
 ALGAMES
@@ -37,17 +46,44 @@ ALGAMES
 
 ## Options
 
+### Outer AL Loop
 | Option | Default | Description |
 |--------|---------|-------------|
-| `max_outer` | `30` | Maximum augmented Lagrangian outer iterations |
-| `max_inner` | `100` | Maximum Newton iterations per outer loop |
-| `ρ_init` | `1.0` | Initial penalty parameter |
-| `ρ_scale` | `10.0` | Penalty growth factor per outer iteration |
-| `ρ_max` | `1e6` | Maximum penalty (caps penalty growth) |
-| `ε_primal` | `1e-4` | Primal feasibility tolerance (constraint violation) |
-| `ε_dual` | `1e-4` | Dual feasibility tolerance (stationarity residual) |
-| `reg` | `1e-3` | Regularization added to Newton Hessian |
-| `verbose` | `false` | Print per-iteration log |
+| `outer_iter` | `50` | Maximum augmented Lagrangian iterations |
+| `ρ_init` | `1.0` | Initial penalty weight |
+| `ρ_increase` | `10.0` | Geometric multiplier for penalty growth |
+| `ρ_max` | `1e8` | Cap on penalty parameter |
+
+### Newton Inner Loop
+| Option | Default | Description |
+|--------|---------|-------------|
+| `inner_iter` | `10` | Maximum Newton steps per outer iteration |
+| `reg` | `1e-3` | Tikhonov regularization on Hessian |
+
+### Line Search
+| Option | Default | Description |
+|--------|---------|-------------|
+| `ls_iter` | `20` | Maximum backtracks in Armijo line search |
+| `ls_beta` | `0.1` | Sufficient-decrease fraction |
+| `ls_tau` | `0.5` | Step contraction factor |
+
+### Convergence Tolerances
+| Option | Default | Description |
+|--------|---------|-------------|
+| `tol_opt` | `1e-4` | Stationarity norm tolerance |
+| `tol_dyn` | `1e-4` | Dynamics residual tolerance |
+| `tol_con` | `1e-3` | Maximum constraint violation tolerance |
+
+### Warm-start
+| Option | Default | Description |
+|--------|---------|-------------|
+| `reset_duals` | `true` | If false, load dual variables from WarmstartData |
+
+## Capabilities
+
+```@docs
+solver_capabilities(::Type{ALGAMES})
+```
 
 ## Applicable Problem Types
 
@@ -71,9 +107,11 @@ ws    = WarmstartData(sol1)
 sol2  = solve(game2, ALGAMES(); warmstart=ws)
 ```
 
+When `reset_duals=false`, the solver will reuse dual variables (λ, ρ, μ) from the warmstart data.
+
 ## Practical Tips
 
-**Tuning penalty growth**: If ALGAMES fails to converge, try reducing `ρ_scale` (e.g., to 2.0) to grow the penalty more conservatively, or increase `reg` to stabilize the Newton solve.
+**Tuning penalty growth**: If ALGAMES fails to converge, try reducing `ρ_increase` (e.g., to 2.0) to grow the penalty more conservatively, or increase `reg` to stabilize the Newton solve.
 
 **Warmstart from iLQGames**: For nonlinear constrained problems, solve the unconstrained version with iLQGames first to get a good initial trajectory, then pass it as a warmstart to ALGAMES:
 
@@ -89,7 +127,13 @@ sol_alg = solve(game, ALGAMES(); warmstart=WarmstartData(sol_ilq))
 Convergence is declared when both residuals drop below their tolerances:
 
 ```math
-\|g_{\text{primal}}\|_\infty < \varepsilon_{\text{primal}}, \quad \|g_{\text{dual}}\|_\infty < \varepsilon_{\text{dual}}
+\|g_{\text{primal}}\|_\infty < \varepsilon_{\text{opt}}, \quad \|g_{\text{dyn}}\|_\infty < \varepsilon_{\text{dyn}}, \quad \text{max constraint violation} < \varepsilon_{\text{con}}
 ```
 
-where ``g_{\text{primal}}`` is the constraint violation and ``g_{\text{dual}}`` is the stationarity residual of the augmented Lagrangian with respect to the primal variables.
+where ``g_{\text{opt}}`` is the stationarity residual and ``g_{\text{dyn}}`` is the dynamics residual.
+
+## References
+
+Le Cleac'h, S., Schwager, M., Manchester, I. (2021). *ALGAMES: A Fast Augmented Lagrangian Solver for Constrained Dynamic Games.* [arXiv:2104.08452](https://arxiv.org/abs/2104.08452).
+
+See also the implementation notes in [DifferentialGamesBaseSolvers.jl](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl).
