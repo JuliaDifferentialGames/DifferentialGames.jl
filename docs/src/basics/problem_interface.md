@@ -31,10 +31,10 @@ dyn_1d = (xi, ui, p, t) -> [xi[2]; ui[1]]
 # Unicycle: [x, y, v, θ] → [v cos θ, v sin θ, a, ω]
 dyn_unicycle = (xi, ui, p, t) -> [xi[3]*cos(xi[4]); xi[3]*sin(xi[4]); ui[1]; ui[2]]
 
-# Discrete-time (same signature; PDGNEProblem discretizes automatically)
+# Continuous-time right-hand sides are discretized by the solver (iLQGames: `ZOHDiscretization()` by default)
 ```
 
-The function operates on a **single player's** state `xi` and controls `ui`. DifferentialGamesBase assembles the separable joint dynamics automatically.
+The function operates on a **single player's** state `xi` and controls `ui`. DifferentialGamesBase assembles the separable joint dynamics automatically. **Cost and constraint functions are solver dependent**: `ALGAMES` passes them the joint state and control, `iLQGames` the player's own slices (see [Conventions](../ecosystem/conventions.md)).
 
 ## Defining Costs
 
@@ -58,16 +58,18 @@ stage = NonlinearStageCost(
     is_separable = true   # true if cost depends only on xi, ui (not other players)
 )
 
-terminal = NonlinearTerminalCost(x -> x' * Qf * x)
+terminal = NonlinearTerminalCost((x, p) -> x' * Qf * x)   # terminal costs take (x, p)
 ```
 
 ### Cost Term DSL
 
 For composable nonlinear costs:
 
+`player_slice(x, offset, dim)` extracts a sub-vector of a state vector `x`; the cost terms below take a `state_slice` argument (see the API reference for exact signatures, which were not re-verified in this audit):
+
 ```julia
 goal     = [0.0, 0.0, 0.0, 0.0]
-slice    = player_slice(1, 4, 8)   # indices of player 1's state in joint state
+slice    = 1:4                      # indices of player 1's state in the joint state
 
 stage = minimize(
     track_goal(goal, 1.0; state_slice=slice),      # ‖x - goal‖²
@@ -113,12 +115,12 @@ player = PlayerSpec(id, n, m, x0, dyn, obj, [cb, sb])
 ### Shared Constraints (multi-player)
 
 ```julia
-# Proximity (avoid): ‖xi - xj‖ ≥ d_safe
+# Proximity (avoid): ‖pᵢ - pⱼ‖ ≥ d_min
 col = collision_avoidance([1, 2];
-    state_offset_i = 0,
-    state_offset_j = n,
-    d_safe         = 1.5,
-    state_dim      = 2     # only position dimensions count
+    i_offset = 0,       # start of player 1's position in the joint state
+    j_offset = n,       # start of player 2's position in the joint state
+    pos_dim  = 2,       # only position dimensions count
+    d_min    = 1.5,
 )
 
 # General nonlinear inequality
@@ -146,7 +148,7 @@ game = PDGNEProblem([player1, player2], tf, dt)
 game = LQGameProblem(A, B, Q, R, Qf, x0, tf; dt=dt)
 ```
 
-`B` is a `Vector{Matrix}` — one matrix per player. `Q`, `R`, `Qf` are `Vector{Matrix}` — one per player.
+`A` must be a `Matrix{Float64}` (not `I(n)`); `B`, `Q`, `R`, `Qf` are `Vector{Matrix{Float64}}` — one matrix per player. `x0` is a `Vector{Float64}` and `tf` a `Float64`.
 
 ### Inspecting the Game
 

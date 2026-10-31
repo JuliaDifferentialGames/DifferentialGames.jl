@@ -5,7 +5,7 @@ Most practical multi-agent problems have hard constraints: control limits, safet
 - **Private constraints** — affect only one player (control bounds, state limits)
 - **Shared constraints** — couple multiple players (collision avoidance, formation keeping)
 
-The **ALGAMES** solver handles both via an augmented Lagrangian outer loop with Newton-type inner iterations.
+The **ALGAMES** solver handles both via an augmented Lagrangian outer loop with Newton-type inner iterations. The **iLQGames** solver does *not*: it asserts on games with constraints.
 
 ## Constraint Types
 
@@ -13,110 +13,75 @@ The **ALGAMES** solver handles both via an augmented Lagrangian outer loop with 
 |------|-------------|------------|
 | Control box bounds | `control_bounds` | Single player |
 | State box bounds | `state_bounds` | Single player |
-| Proximity (stay close) | `keep_in_range` | Two players |
-| Proximity (avoid) | `collision_avoidance` | Two players |
+| Pairwise distance | `collision_avoidance`, `keep_in_range` | Two players |
 | Linear coupling | `linear_coupling` | Multiple players |
-| General nonlinear inequality | `SharedInequality` | Multiple players |
+| General nonlinear inequality | `SharedInequality`, `PrivateInequality` | Shared / private |
 | General nonlinear equality | `SharedEquality` | Multiple players |
 
-## Example: Formation Flight with Control Limits
+## Example: Two Vehicles Swapping Lanes
 
-Three aircraft maintain a triangular formation while staying within actuator limits.
+Two single-integrator vehicles drive from ``x=0`` to ``x=5`` and must swap lanes (``y=2 \to -2`` and ``y=-1.5 \to 2``) while staying at least 1.5 apart. Velocities are bounded by ``|u| \le 2``. The problem is asymmetric on purpose (the two starting lanes are not mirror images): a perfectly symmetric swap makes the equilibrium degenerate.
 
-```julia
+!!! warning "ALGAMES evaluates costs and constraints on the *joint* state and control"
+    The joint state is ``x = [x_1; x_2]``, so player ``i``'s position lives at indices `2(i-1)+1 : 2(i-1)+2`, and its controls at `u[2(i-1)+1 : 2i]`. A cost or constraint written with `x[1:2]` for every player refers to player 1, and `sum(abs2, u)` charges a player for *all* players' control effort. (`iLQGames`, which does not support constraints, passes a player's own state and control slices instead; see [Conventions](../ecosystem/conventions.md).)
+
+```@example constrained
 using DifferentialGames, LinearAlgebra
 
-# ── Single-integrator aircraft dynamics ───────────────────────
-# State: [x, y]  Control: [vx, vy]  (velocity-controlled)
-dyn = (xi, ui, p, t) -> ui
+dyn = (xi, ui, p, t) -> ui                       # single integrator: ẋ = u
 
-# ── Costs ─────────────────────────────────────────────────────
-# Each aircraft wants to reach its formation slot
-goals = [[4.0, 2.0], [4.0, -2.0], [8.0, 0.0]]   # formation targets
-
-function make_stage(i)
-    NonlinearStageCost(
-        (x, u, p, t) -> 0.01 * (u' * u),   # minimize fuel only
-        is_separable=true
-    )
+# Player i penalizes only its own block of the joint state.
+function make_player(i, x0, goal)
+    o = 2 * (i - 1)
+    stage    = NonlinearStageCost((x, u, p, t) -> 0.01 * sum(abs2, u[o+1:o+2]); is_separable = true)   # own controls only
+    terminal = NonlinearTerminalCost((x, p) -> 10.0 * ((x[o+1] - goal[1])^2 + (x[o+2] - goal[2])^2))
+    bounds   = control_bounds(i; control_offset = o, control_dim = 2,
+                              lower = [-2.0, -2.0], upper = [2.0, 2.0])
+    return PlayerSpec(i, 2, 2, x0, dyn, PlayerObjective(i, stage, terminal), [bounds])
 end
 
-function make_terminal(i)
-    g = goals[i]
-    NonlinearTerminalCost(x -> 10.0 * ((x[1]-g[1])^2 + (x[2]-g[2])^2))
-end
+players = [make_player(1, [0.0,  2.0], [5.0, -2.0]),
+           make_player(2, [0.0, -1.5], [5.0,  2.0])]
 
-# ── Control bounds ────────────────────────────────────────────
-# Each player's velocity is limited to ±2 m/s in each axis
-function make_bounds(player_id, control_offset)
-    control_bounds(player_id;
-        control_offset = control_offset,
-        control_dim    = 2,
-        lower          = [-2.0, -2.0],
-        upper          = [ 2.0,  2.0]
-    )
-end
+# Shared constraint g(x) ≤ 0  ⇔  ‖p₁ − p₂‖ ≥ 1.5
+d_min = 1.5
+separation = SharedInequality([1, 2];
+    func = (x, u, p, t) -> [d_min^2 - sum(abs2, x[1:2] - x[3:4])],
+    dim  = 1)
 
-# ── Pairwise collision avoidance ──────────────────────────────
-# Minimum separation: 1.5 m
-function avoid_pair(i, j, offset_i, offset_j)
-    SharedInequality([i, j];
-        func = (x, u, p, t) -> begin
-            xi = x[offset_i .+ (1:2)]
-            xj = x[offset_j .+ (1:2)]
-            [1.5^2 - sum((xi .- xj).^2)]
-        end,
-        dim = 1
-    )
-end
-
-# ── Build players ─────────────────────────────────────────────
-x0s = [[0.0, 1.0], [0.0, -1.0], [0.0, 0.0]]
-
-players = [
-    PlayerSpec(i, 2, 2, x0s[i], dyn,
-               PlayerObjective(i, make_stage(i), make_terminal(i)),
-               [make_bounds(i, (i-1)*2)])
-    for i in 1:3
-]
-
-# ── Shared constraints ────────────────────────────────────────
-shared = [
-    avoid_pair(1, 2, 0, 2),
-    avoid_pair(1, 3, 0, 4),
-    avoid_pair(2, 3, 2, 4),
-]
-
-game = PDGNEProblem(players, shared, 4.0, 0.1)
-
-# ── Solve ─────────────────────────────────────────────────────
-sol = solve(game, ALGAMES(; verbose=true))
-
-println("converged: ", sol.converged)
-for i in 1:3
-    println("Player $i cost: ", round(get_cost(sol, i); digits=4))
-    traj = get_trajectory(sol, i)
-    println("  final position: ", round.(traj.states[:, end]; digits=2))
-end
+game = PDGNEProblem(players, [separation], 4.0, 0.1)
+sol  = solve(game, ALGAMES(; tol_opt = 1e-2))
+(converged = sol.converged, iterations = sol.iterations)
 ```
+
+!!! note "Choosing `tol_opt`"
+    With the default `tol_opt = 1e-4` this problem reaches a trajectory that satisfies the constraints to ~1e-7 but the stationarity residual stays large and `converged` is `false`. Tolerances should be chosen to match the accuracy you need; always verify the constraints directly, as below, rather than trusting a flag.
 
 ## Checking Constraint Satisfaction
 
-```julia
-# Retrieve all shared constraint values at the solution
-for (k, c) in enumerate(game.shared_constraints)
-    traj1 = get_trajectory(sol, 1)
-    traj2 = get_trajectory(sol, 2)
-    # Joint state at final time
-    x_T = vcat(traj1.states[:, end], traj2.states[:, end])
-    val = evaluate_constraint(c, x_T, zeros(4), nothing, 0.0)
-    println("Constraint $k at T: ", val, " (should be ≤ 0 for satisfied inequality)")
-end
+Solution `states` are joint, so the full joint state at **every time node** can be passed directly to `evaluate_constraint`. By default ALGAMES enforces constraints only at nodes `1:N` (see `terminal_constraints` below), so checking all `N+1` nodes is the stricter test:
+
+```@example constrained
+X = get_trajectory(sol, 1).states                      # joint state, 4 × (N+1)
+U = hcat(get_trajectory(sol, 1).controls, get_trajectory(sol, 2).controls)
+
+# max over all nodes of g(x_k) (≤ 0 means feasible)
+g_max = maximum(evaluate_constraint(separation, X[:, k], zeros(4), nothing, 0.0)[1]
+                for k in axes(X, 2))
+
+# minimum inter-vehicle distance over the horizon
+d_obs = minimum(norm(X[1:2, k] - X[3:4, k]) for k in axes(X, 2))
+
+@show g_max d_obs maximum(abs, U)
+@assert g_max ≤ 1e-3                  # constraint satisfied to tolerance
+@assert maximum(abs, U) ≤ 2.0 + 1e-2  # control bounds respected
 ```
+
+Here `g_max < 0` and the minimum distance is well above `d_min`: **the collision constraint is inactive in this particular solution** (the vehicles cross the lane centre at different times). The control bound, in contrast, is active (`max|u| ≈ 2`). A different local solution (for example the one found with the default `tol_opt`) can pass closer to the constraint boundary, which is why the check above is worth running.
 
 ## Private Constraints in Detail
 
-Private constraints are attached to a `PlayerSpec` and affect only that player's sub-state and controls:
+Private constraints are attached to a `PlayerSpec` and act on that player's sub-state and controls:
 
 ```julia
 # Control bounds for player 1 (control offset 0, 2 controls)
@@ -135,27 +100,35 @@ player = PlayerSpec(1, 4, 2, x0, dyn, obj, [cb, sb, nl])
 
 ## Solver Tuning
 
-ALGAMES uses an augmented Lagrangian outer loop. Key parameters:
+ALGAMES options (see the [ALGAMES reference](../solvers/algames.md)):
 
 ```julia
 sol = solve(game, ALGAMES(;
-    max_outer   = 30,    # max augmented Lagrangian outer iterations
-    max_inner   = 100,   # max Newton iterations per outer loop
-    ρ_init      = 1.0,   # initial penalty parameter
-    ρ_scale     = 10.0,  # penalty growth factor
-    ρ_max       = 1e6,   # penalty cap
-    ε_primal    = 1e-4,  # primal feasibility tolerance
-    ε_dual      = 1e-4,  # dual feasibility tolerance
-    verbose     = false
+    outer_iter = 50,     # maximum augmented-Lagrangian iterations
+    inner_iter = 10,     # Newton steps per outer iteration
+    ρ_init     = 1.0,    # initial penalty
+    ρ_increase = 10.0,   # penalty growth factor
+    ρ_max      = 1e8,    # penalty cap
+    reg        = 1e-3,   # Newton regularization
+    tol_opt    = 1e-4,   # stationarity tolerance
+    tol_dyn    = 1e-4,   # dynamics-residual tolerance
+    tol_con    = 1e-3,   # constraint-violation tolerance
 ))
 ```
 
-If ALGAMES fails to converge, try:
-1. Increasing `ρ_scale` for faster constraint enforcement
-2. Checking that constraints are feasible from the initial state
-3. Reducing the horizon or time step
+`verbose` is an argument of `solve`, not of `ALGAMES`: `solve(game, ALGAMES(); verbose=true)`.
+
+### Constraints at the final time
+
+By default ALGAMES does not constrain the terminal state `x(N+1)`. Pass `terminal_constraints = true` to enforce the state-only constraint rows there as well (control bounds, which depend on `u`, still apply to nodes `1:N` only):
+
+```julia
+sol = solve(game, ALGAMES(; tol_opt = 1e-2, terminal_constraints = true))
+```
+
+If ALGAMES fails to converge: check that the initial state is feasible, loosen `tol_opt`, try a different `ρ_increase`/`inner_iter`, and **always** verify the result independently. Different settings can land in different local solutions of the same problem.
 
 ## Further Reading
 
-- [ALGAMES solver reference](../solvers/algames.md) — full option list and algorithm details
+- [ALGAMES solver reference](../solvers/algames.md) — option list and algorithm details
 - [Constraint API reference](../api/constraints.md) — all constraint types and constructors

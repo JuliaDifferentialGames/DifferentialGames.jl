@@ -1,92 +1,88 @@
 # First Example
 
-This page walks through a complete two-player differential game from problem specification to solution extraction. We use a **two-spacecraft rendezvous** scenario: both vehicles try to reach a common target while managing fuel cost.
+This page walks through a complete two-player differential game from problem specification to solution extraction. Two unicycle-model vehicles start apart and each drives toward the origin region while keeping speed and control effort low.
 
 ## The Problem
 
-Two spacecraft in 2D move under double-integrator dynamics:
+Each vehicle has state ``[x, y, v, \theta]`` (position, speed, heading) and controls ``[a, \omega]`` (acceleration, turn rate):
 
 ```math
-\dot{x}_i = v_i, \quad \dot{v}_i = u_i, \quad i = 1, 2
+\dot x = v\cos\theta, \quad \dot y = v\sin\theta, \quad \dot v = a, \quad \dot\theta = \omega .
 ```
 
-After discretization at ``\Delta t = 0.1`` s each player solves:
+Player ``i`` minimizes its own quadratic cost
 
 ```math
-\min_{u_i} \; \sum_{k=0}^{N-1} \left[ x_i^\top Q_i x_i + u_i^\top R_i u_i \right] + x_i(N)^\top Q_f x_i(N)
+J_i = \tfrac12\Big[\sum_{k=0}^{N-1} x_{i,k}^\top Q_i x_{i,k} + u_{i,k}^\top R_i u_{i,k} + x_{i,N}^\top Q_{f,i} x_{i,N}\Big]
 ```
 
-subject to the other player also playing optimally. The Nash equilibrium is the solution where neither player can improve their cost by changing their control, given the other's strategy.
+The factor ``\tfrac12`` is the convention used by the solvers' reported costs (see [Working with Solutions](../basics/solutions.md)). In this example the players do not interact through their costs, so the equilibrium is simply each player's own optimal-control solution; see the [Constrained Games tutorial](../tutorials/constrained_games.md) for genuine coupling.
 
 ## Code
 
-```julia
+```@example first
 using DifferentialGames, LinearAlgebra
 
-# ── Dynamics ──────────────────────────────────────────────────
-# State: [x, y, vx, vy] for each player (total 8 states)
-# Each player controls [ax, ay] (2 actuators)
-#
-# Separable dynamics: each player has independent state
+# Per-player continuous-time dynamics ẋ = f(xᵢ, uᵢ, p, t).
+# Dynamics are SEPARABLE: players interact only through costs and shared constraints.
+unicycle(xi, ui, p, t) = [xi[3]*cos(xi[4]); xi[3]*sin(xi[4]); ui[1]; ui[2]]
 
-dyn = (xi, ui, p, t) -> [xi[3]; xi[4]; ui[1]; ui[2]]   # ẋ=v, v̇=u
+stage    = DiagonalLQStageCost([0.1, 0.1, 1.0, 0.1], [0.1, 0.1])
+terminal = DiagonalLQTerminalCost([10.0, 10.0, 1.0, 0.1])
 
-# ── Costs ─────────────────────────────────────────────────────
-stage    = DiagonalLQStageCost([0.0, 0.0, 1.0, 1.0], [0.1, 0.1])
-terminal = DiagonalLQTerminalCost([10.0, 10.0, 1.0, 1.0])
+player1 = PlayerSpec(1, 4, 2, [-3.0,  0.0, 1.0, 0.0],  unicycle, PlayerObjective(1, stage, terminal))
+player2 = PlayerSpec(2, 4, 2, [ 0.0, -3.0, 1.0, π/2], unicycle, PlayerObjective(2, stage, terminal))
 
-# ── Players ───────────────────────────────────────────────────
-player1 = PlayerSpec(1, 4, 2, [3.0, 0.0, 0.0, 0.0], dyn,
-                     PlayerObjective(1, stage, terminal))
+game = PDGNEProblem([player1, player2], 4.0, 0.1)
 
-player2 = PlayerSpec(2, 4, 2, [-3.0, 0.0, 0.0, 0.0], dyn,
-                     PlayerObjective(2, stage, terminal))
-
-# ── Game ──────────────────────────────────────────────────────
-game = PDGNEProblem([player1, player2], 5.0, 0.1)
-
-# ── Solve ─────────────────────────────────────────────────────
-sol = solve(game, iLQGames(); verbose=true)
-
-println("converged:      ", sol.converged)
-println("Player 1 cost:  ", round(get_cost(sol, 1); digits=4))
-println("Player 2 cost:  ", round(get_cost(sol, 2); digits=4))
+# iLQGames: local feedback-Nash approximation for unconstrained nonlinear games.
+sol = solve(game, iLQGames())
+(converged = sol.converged, iterations = sol.iterations)
 ```
+
+!!! note "Which state do cost functions see?"
+    In a `PDGNEProblem` each player's *dynamics* act on that player's own state.
+    `DiagonalLQStageCost` and other LQ costs are applied to each player's own block automatically.
+    Custom `NonlinearStageCost`/`NonlinearTerminalCost` functions are solver dependent:
+    `ALGAMES` evaluates them on the **joint** state `[x₁; x₂; …]` and joint control, `iLQGames` on the
+    player's own slices (see [Conventions](../ecosystem/conventions.md) and the
+    [Constrained Games](../tutorials/constrained_games.md) tutorial).
 
 ## Accessing the Solution
 
-```julia
-# Retrieve the trajectory for player 1
+```@example first
 traj1 = get_trajectory(sol, 1)
 
-# traj1.states  is (4 × N+1)  — state at each time step
-# traj1.controls is (2 × N)   — control at each time step
-# traj1.cost    is a Float64  — total cost for player 1
+# For PD-GNEP solutions `states` holds the JOINT state, 8 × (N+1): player 1 occupies
+# rows 1:4 and player 2 rows 5:8. `controls` holds that player's own controls, 2 × N.
+@show size(traj1.states) size(traj1.controls)
 
-println("Final position (P1): ", traj1.states[1:2, end])
-println("Final position (P2): ", get_trajectory(sol, 2).states[1:2, end])
-
-# The shared strategy (feedback gains) if available
-if has_strategy(sol)
-    strat = get_strategy(sol)
-end
+println("Final position of player 1: ", round.(traj1.states[1:2, end]; digits=2))
+println("Final position of player 2: ", round.(traj1.states[5:6, end]; digits=2))
+println("costs: ", round.(get_costs(sol); digits=3))
+println("has strategy: ", has_strategy(sol), "  (", typeof(get_strategy(sol)), ")")
 ```
+
+`sol.converged` reports the solver's own stopping test, not a proof that the
+point is a Nash equilibrium. See [Working with Solutions](../basics/solutions.md).
 
 ## Using a Different Solver
 
-Because all solvers share the same `solve` interface, switching is one word:
+Because all solvers share the same `solve` interface, switching is one word.
+`FNELQ` is exact but only applies to games built with `LQGameProblem` /
+`LTVLQGameProblem` (linear dynamics on a shared state):
 
-```julia
-# Exact LQ feedback Nash (only valid for LQ problems)
+```@example first
 lq_game = LQGameProblem(
-    I(4), [I(4)[:, 1:2], I(4)[:, 3:4]],
-    [diagm(ones(4)), diagm(ones(4))],
-    [0.1*I(2), 0.1*I(2)],
-    [10.0*diagm(ones(4)), 10.0*diagm(ones(4))],
+    Matrix(1.0I(4)), [Matrix(1.0I(4))[:, 1:2], Matrix(1.0I(4))[:, 3:4]],
+    [Matrix(1.0I(4)), Matrix(1.0I(4))],
+    [Matrix(0.1I(2)), Matrix(0.1I(2))],
+    [Matrix(10.0I(4)), Matrix(10.0I(4))],
     [3.0, 0.0, -3.0, 0.0], 5.0; dt=0.1
 )
 
 sol_fnelq = solve(lq_game, FNELQ())
+sol_fnelq.converged
 ```
 
 ## Next Steps

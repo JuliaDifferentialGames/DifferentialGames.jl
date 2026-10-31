@@ -6,7 +6,7 @@
 
 This solver implements Algorithm 1 from:
 
-> Miller, K. & Mitra, S. (2022). *Multi-agent motion planning using differential games with lexicographic preferences.* IEEE CDC 2022, pp. 5751–5757.
+> [MillerMitra2022](@cite)
 
 LIBR computes a **Lexicographic Nash Equilibrium (L-NE)** for games where each player has a lexicographic cost structure: Jᵢ(z) = (Jᵢᶜᵒˡ, Jᵢᵖᵉʳ) ∈ ℝ² ordered lexicographically.
 
@@ -34,10 +34,11 @@ sol = solve(game, LIBR(;
     ls_max_iter  = 15,
     ls_armijo    = 1e-4,
     col_penalty  = 1e3,
-    col_slack    = 1e-6,
-    verbose      = false
+    col_slack    = 1e-6
 ))
 ```
+
+A complete example that is executed during the documentation build (two agents swapping sides, with a check on the minimum separation) is on the [LexicographicGameProblem](../problem_types/lexicographic.md) page.
 
 ## Solver Type Documentation
 
@@ -114,6 +115,12 @@ Convergence is declared when:
 - **Multi-agent motion planning**: Where collision avoidance (Jᶜᵒˡ) has higher priority than reaching a goal (Jᵖᵉʳ)
 - **Safety-critical systems**: Where safety constraints must be satisfied before optimizing performance
 - **Hierarchical objectives**: Any scenario where players have prioritized objectives
+
+## Known limitations
+
+- The lexicographic priority is enforced in Phase 2 by a quadratic penalty, not by a hard constraint. With the default `col_penalty = 1e3` a head-on test ended with a minimum separation of 0.17 against a collision distance of 0.3; `col_penalty = 1e9` gave 0.29. Verify `sol.solver_info[:J_col]` and the separation for your problem.
+- Symmetric head-on configurations have zero lateral gradient; break the symmetry in the initial state.
+- `sol.state_trajectory` is `nothing`; each player's `Trajectory.states` holds its own state.
 
 ## Notes
 

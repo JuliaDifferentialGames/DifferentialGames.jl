@@ -51,8 +51,7 @@ sol = solve(inverse_problem, InverseLQGames())
 sol = solve(inverse_problem, InverseLQGames(;
     tol       = 1e-6,
     K_ridge   = 0.0,
-    svd_tol   = 1e-8,
-    verbose   = false
+    svd_tol   = 1e-8
 ))
 ```
 
@@ -135,6 +134,6 @@ The solution contains:
 
 ## References
 
-Inga, J., Bischoff, E., Molloy, T.L., Flad, M., Hohmann, S. (2019). *Solution sets for inverse non-cooperative linear-quadratic differential games.* IEEE Control Systems Letters, 3(4), 871–876.
+[Inga2019](@cite)
 
 See also the implementation notes in [DifferentialGamesBaseSolvers.jl](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl).

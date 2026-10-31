@@ -11,7 +11,7 @@ iLQGames extends the iterative LQR (iLQR) idea to the multi-player setting. Each
 3. **LQ subgame** — solve the resulting time-varying LQ game exactly with FNELQ to obtain gain corrections ``\delta K_i^k``.
 4. **Line search** — step from the nominal trajectory toward the corrected trajectory, backtracking until a sufficient decrease in the total Nash residual is found.
 
-Convergence is declared when the maximum change in any element of the trajectory falls below ``\varepsilon_\text{conv}``.
+Convergence is declared when the maximum change in any element of the trajectory falls below ``\varepsilon_\text{conv}`` (default `0.05`, an absolute tolerance on states).
 
 ## Usage
 
@@ -30,8 +30,10 @@ sol = solve(game, iLQGames(;
     μ_scale           = 10.0,
     μ_decay           = 0.5,
     discretization    = ZOHDiscretization(),
-    verbose           = false,
 ))
+
+# `verbose` and `warmstart` are arguments of `solve`, not of the solver:
+sol = solve(game, iLQGames(); verbose=true)
 ```
 
 ## Solver Type Documentation
@@ -65,15 +67,17 @@ solver_capabilities(::Type{iLQGames})
 
 | Problem Type | Supported |
 |--------------|-----------|
-| `LQGameProblem` | Yes (converges in 1 iter) |
+| `LQGameProblem` | Yes — but it iterates and is regularized; prefer `FNELQ` |
 | `LTVLQGameProblem` | Yes |
-| `PDGNEProblem` | Yes |
+| `PDGNEProblem` | Yes, unconstrained only |
 | Nonlinear dynamics / costs | Yes |
 | Shared / private constraints | No — use `ALGAMES` |
 
 ## Convergence
 
-iLQGames finds a **local** feedback Nash equilibrium of successive LQ approximations. There is no guarantee of global optimality, and the solution found may depend on the initial strategy (zero by default). For nonlinear problems it is common to run from several random initializations and take the best.
+iLQGames finds a **local** feedback Nash equilibrium of successive LQ approximations. There is no guarantee of global optimality, and the solution found may depend on the initial strategy (zero by default). The trajectory-change test is a numerical stopping criterion, **not** a certificate of equilibrium. Always inspect `sol.converged`, `sol.iterations` and `sol.solver_info[:trajectory_change_history]`.
+
+On an exactly linear-quadratic problem the converged cost approaches the exact feedback-Nash cost from `FNELQ`; the rate is governed by the regularization `μ_init` (default `1.0`), so a small `ε_conv` is needed for tight agreement (a double-integrator `PDGNEProblem` with exact per-player cost 7.9835 is covered by a regression test).
 
 The primary output is a `FeedbackStrategy` from the last converged FNELQ solve, which constitutes a feedback Nash equilibrium of the LQ subgame built around the converged nominal trajectory (§IV-B of Fridovich-Keil et al. 2020).
 
@@ -83,6 +87,17 @@ Convergence criterion:
 \max_k \|x_k^{(j+1)} - x_k^{(j)}\|_\infty < \varepsilon_{\text{conv}}
 ```
 
+## Assumptions and guarantees
+
+None beyond local smoothness. The returned point is a feedback-Nash equilibrium of the *last LQ approximation*, not of the nonlinear game; the trajectory-change test is a stopping rule. Results depend on the initial (zero-control) trajectory, the horizon and the regularization `μ_init`.
+
+## Known limitations
+
+- No constraints (asserts); use [ALGAMES](algames.md).
+- Local method; different initializations can give different solutions.
+- Linear convergence governed by the regularization `μ` (default `1.0`): tight agreement with an exact LQ solution needs a small `ε_conv`.
+- Dynamics and costs must be ForwardDiff-compatible.
+
 ## Notes
 
 - Dynamics and stage costs must be differentiable with respect to state and control. The solver uses `ForwardDiff.jl` for automatic differentiation; closures must be ForwardDiff-compatible (avoid type-specific branches or non-differentiable operations).
@@ -91,4 +106,4 @@ Convergence criterion:
 
 ## References
 
-Fridovich-Keil, D., Ratner, E., Peters, L., Dragan, A. D., & Tomlin, C. J. (2020). *Efficient Iterative Linear-Quadratic Approximations for Nonlinear Multi-Player General-Sum Differential Games.* ICRA 2020. [arXiv:1909.04694](https://arxiv.org/abs/1909.04694)
+[FridovichKeil2020](@cite) ([arXiv:1909.04694](https://arxiv.org/abs/1909.04694))

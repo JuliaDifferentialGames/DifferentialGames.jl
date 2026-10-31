@@ -1,2 +1,22 @@
 [deps]
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
+DocumenterCitations = "daee34ce-89f3-4625-b898-19384cb65244"
+DocumenterInterLinks = "d12716ef-a0f6-4df4-a9f1-a5a34e75c656"
+DocumenterLandingPage = "1c52b33b-3e2f-4e99-b3b5-a6ad63f0d6d2"
+DifferentialGames = "497f78f8-f326-11f0-3aad-a3ebf6911431"
+DifferentialGamesBase = "a9dd1e63-b4ad-4579-bca8-3a609f3d87b9"
+DifferentialGamesBaseSolvers = "b83b0c57-42fa-43ab-a182-d5be40f43772"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
+
+[sources]
+DifferentialGames = {path = ".."}
+DifferentialGamesBase = {url = "https://github.com/JuliaDifferentialGames/DifferentialGamesBase.jl", rev = "main"}
+DifferentialGamesBaseSolvers = {url = "https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl", rev = "main"}
+
+[compat]
+Documenter = "1"
+DocumenterCitations = "1"
+DocumenterInterLinks = "1"
+DocumenterLandingPage = "0.2"
+julia = "1.11"

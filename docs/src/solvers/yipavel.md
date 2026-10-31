@@ -6,7 +6,7 @@
 
 This solver implements Algorithm 1 from:
 
-> Yi, P. & Pavel, L. (2017). *A distributed primal-dual algorithm for computation of generalized Nash equilibria via operator splitting.* IEEE CDC 2017, pp. 3841–3846.
+> [YiPavel2017](@cite)
 
 YiPavel targets `ConvexGameProblem{T}`: an N-player convex game with:
 - Separable dynamics
@@ -46,10 +46,11 @@ sol = solve(game, YiPavel(;
     tol      = 1e-6,
     τ        = 0.05,
     ν        = 0.02,
-    σ        = 0.05,
-    verbose  = false
+    σ        = 0.05
 ))
 ```
+
+`solve` takes the player cost functions through the `cost_fns` keyword (one function of all players' decisions per player), because the placeholder LQ objectives of the wrapped game are not used. A complete example whose result is checked against the analytical equilibrium is on the [ConvexGameProblem](../problem_types/convex.md) page. Solving the *constrained* (shared affine coupling) case is covered by the solver's tests; it is not reproduced in this manual.
 
 ## Solver Type Documentation
 

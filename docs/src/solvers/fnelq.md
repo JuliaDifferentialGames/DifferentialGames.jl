@@ -63,7 +63,7 @@ solver_capabilities(::Type{FNELQ})
 |--------------|-----------|
 | `LQGameProblem` | Yes |
 | `LTVLQGameProblem` | Yes |
-| `PDGNEProblem` (LQ costs) | Yes |
+| `PDGNEProblem` (LQ costs) | **No** — `PDGNEProblem` stores function dynamics; FNELQ asserts `FNELQ requires LinearDynamics` |
 | Nonlinear dynamics / costs | No |
 | Constrained games | No |
 
@@ -73,12 +73,34 @@ solver_capabilities(::Type{FNELQ})
 - Inner loop of an inverse game solver (fastest per-call cost).
 - Validating that nonlinear solvers converge to the right answer on LQ problems.
 
-FNELQ is always the right choice when the problem is LQ. It does not iterate, does not require tuning, and produces the exact feedback Nash equilibrium up to floating-point precision.
+When the problem can be written as an `LQGameProblem` / `LTVLQGameProblem`, FNELQ is the natural choice: it does not iterate, needs no tuning, and computes the feedback-Nash gains from the coupled Riccati recursion up to floating-point accuracy (provided the per-stage gain systems are non-singular; see `check_singularity`).
+
+## Reported costs
+
+Reported player costs include the factor ``\tfrac12``: ``J_i = \tfrac12\big[\sum_k x_k^\top Q_i x_k + u_{i,k}^\top R_i u_{i,k} + x_N^\top Q_{f,i}x_N\big]``. For a one-player game this equals ``\tfrac12 x_0^\top P_0 x_0`` from the standard Riccati recursion; the [LQ tutorial](../tutorials/lq_games.md) checks this numerically.
+
+## Diagnostics and interpretation
+
+- `sol.converged` is `true` when the backward pass completed.
+- `sol.solver_info` contains `:min_rcond`, `:rcond_history`, `:max_P_norm`, `:cost_to_go_matrices`.
+- A small `:min_rcond` signals a nearly singular gain system; the equilibrium may not be unique or numerically reliable.
+- `get_strategy(sol)` is a `FeedbackStrategy`: `get_gain(strategy, i, k)` returns ``K_{i,k}`` with ``u_{i,k} = -K_{i,k}x_k``.
 
 ## Complexity
 
 ``O(N \cdot N_{\text{steps}} \cdot n^3)`` where ``n`` is the total state dimension. The dominant cost is the per-step matrix solve for the Nash gains.
 
+## Assumptions and guarantees
+
+For a non-singular stage system ``S_k`` the recursion returns the unique feedback Nash strategies of the LQ game ([Optimality Conditions](../math/optimality_conditions.md)). Existence/uniqueness can fail when some ``S_k`` is singular; FNELQ then warns and sets `converged = false`. Verified here: single-player limit equals the Riccati LQR value, and the closed loop reproduces the stored trajectory.
+
+## Known limitations
+
+- Requires `LinearDynamics` (`LQGameProblem`/`LTVLQGameProblem`); `PDGNEProblem` is rejected.
+- No constraints.
+- Discrete time only.
+- The affine (linear-term) recursion used inside iLQGames had a sign error before the fix recorded in the audit; with current sources it is covered by a regression test.
+
 ## References
 
-The algorithm is based on the standard feedback Nash equilibrium solution for discrete-time LQ games. See also the implementation notes in [DifferentialGamesBaseSolvers.jl](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl).
+The algorithm is the standard feedback Nash equilibrium solution for discrete-time LQ games [BasarOlsder1999](@cite). See also the implementation notes in [DifferentialGamesBaseSolvers.jl](https://github.com/JuliaDifferentialGames/DifferentialGamesBaseSolvers.jl).

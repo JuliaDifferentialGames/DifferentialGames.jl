@@ -45,11 +45,13 @@ sol  = solve(game, FNELQ())
 ## Notes
 
 - `B[i]` has shape `(n, m_i)` where `m_i` is player `i`'s control dimension
-- All matrices must have compatible numeric type `T`; `Float64` is the default
+- Arguments may be any `AbstractMatrix`/`AbstractVector` (for example `I(n)` or `Diagonal`); a converting method turns them into dense `Float64` arrays. (Older versions of `DifferentialGamesBase` required concrete `Matrix{T}`, so `I(n)` raised a `MethodError`.) `LTVLQGameProblem` has the same converting method.
+- Reported costs include a factor ½ (see [FNELQ](../solvers/fnelq.md))
 - For time-varying dynamics, see [`LTVLQGameProblem`](ltv_lq_game.md)
 - For separable (per-player state) games, see [`PDGNEProblem`](pdgnep.md)
 
 ## Compatible Solvers
 
 - [`FNELQ`](../solvers/fnelq.md) — exact; recommended for all LQ games
-- [`iLQGames`](../solvers/ilqgames.md) — convergent on LQ problems, but FNELQ is faster
+- [`iLQGames`](../solvers/ilqgames.md) — accepts LQ problems, but iterates (15 iterations on the README example) and FNELQ is exact and faster
+- [`ALGAMES`](../solvers/algames.md) — accepts LQ problems (open-loop)

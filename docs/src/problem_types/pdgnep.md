@@ -27,33 +27,33 @@ game = PDGNEProblem(players, shared_constraints, tf, dt)
 game = PDGNEProblem(players, tf, dt)
 ```
 
-## Example: Two Spacecraft
+## Example: Two Vehicles with Collision Avoidance
 
-```julia
+Shared constraints require a constraint-capable solver: **ALGAMES**. (`iLQGames` asserts `iLQGames handles only unconstrained games`.)
+
+```@example pdgnep
 using DifferentialGames, LinearAlgebra
 
-# Double-integrator dynamics (position + velocity)
-dyn = (xi, ui, p, t) -> [xi[3]; xi[4]; ui[1]; ui[2]]
+dyn = (xi, ui, p, t) -> ui                       # single integrator
 
-make_player(id, x0) = PlayerSpec(
-    id, 4, 2, x0, dyn,
-    PlayerObjective(id,
-        DiagonalLQStageCost([0.0, 0.0, 1.0, 1.0], [0.1, 0.1]),
-        DiagonalLQTerminalCost([10.0, 10.0, 1.0, 1.0])
-    )
-)
+make_player(i, x0, goal) = PlayerSpec(i, 2, 2, x0, dyn,
+    PlayerObjective(i,
+        NonlinearStageCost((x, u, p, t) -> 0.01 * sum(abs2, u[2(i-1)+1:2i]); is_separable = true),   # own controls
+        # ALGAMES passes the JOINT state and control to cost functions; player i's blocks start at 2(i-1)
+        NonlinearTerminalCost((x, p) -> 10.0 * ((x[2(i-1)+1] - goal[1])^2 +
+                                                (x[2(i-1)+2] - goal[2])^2))))
 
-player1 = make_player(1, [ 3.0, 0.0, 0.0, 0.0])
-player2 = make_player(2, [-3.0, 0.0, 0.0, 0.0])
+players = [make_player(1, [0.0,  2.0], [5.0, -2.0]),
+           make_player(2, [0.0, -1.5], [5.0,  2.0])]
 
-# Collision avoidance: ‖x₁ - x₂‖ ≥ 1.0 m
+# Collision avoidance: ‖p₁ - p₂‖ ≥ 1.0   ⇔   1.0² - ‖p₁ - p₂‖² ≤ 0
 col = SharedInequality([1, 2];
-    func = (x, u, p, t) -> [1.0^2 - sum((x[1:2] - x[5:6]).^2)],
-    dim  = 1
-)
+    func = (x, u, p, t) -> [1.0^2 - sum(abs2, x[1:2] - x[3:4])],
+    dim  = 1)
 
-game = PDGNEProblem([player1, player2], [col], 4.0, 0.1)
-sol  = solve(game, iLQGames())
+game = PDGNEProblem(players, [col], 4.0, 0.1)
+sol  = solve(game, ALGAMES(; tol_opt = 1e-2))
+sol.converged
 ```
 
 ## Joint State Layout
@@ -73,7 +73,7 @@ game.metadata.control_dims   # [m₁, m₂, ...]
 game.metadata.control_offsets # [0, m₁, m₁+m₂, ...]
 ```
 
-When writing shared constraint functions, use these offsets to index into the joint state:
+When writing shared constraint **or cost** functions, use these offsets to index into the joint state:
 
 ```julia
 # Player 2's position is at offset n₁ in the joint state
@@ -81,13 +81,16 @@ offset2 = game.metadata.state_offsets[2]
 pos2    = x[(offset2+1):(offset2+2)]
 ```
 
+!!! warning "Which state does a cost function receive?"
+    It depends on the solver. `ALGAMES` passes the **joint** state and control to `NonlinearStageCost`/`NonlinearTerminalCost` functions and to shared constraints, so a terminal cost for player 2 written with `x[1]`, `x[2]` penalizes *player 1's* position. `iLQGames` (through `expand`) passes only **player i's own** state and control slices, so the same function raises a `BoundsError` (or silently differs). Write the function for the solver you use, or use the portable idiom in [Conventions](../ecosystem/conventions.md).
+
 ## Private Constraints
 
 Private constraints are attached per-player and propagated automatically:
 
 ```julia
 bounds = control_bounds(1; control_offset=0, control_dim=2,
-                         lower=[-1.0, -1.0], upper=[1.0, 1.0])
+                         lower=[-1.0, -1.0], upper=[1.0, 1.0])   # offset = start of THIS player's controls in the joint control vector
 player1 = PlayerSpec(1, 4, 2, x0, dyn, obj, [bounds])
 game    = PDGNEProblem([player1, player2], 4.0, 0.1)
 
@@ -97,8 +100,11 @@ game.private_constraints   # flat Vector of AbstractPrivateConstraint
 
 ## Compatible Solvers
 
-| Solver | Constraints | Notes |
-|--------|-------------|-------|
-| [`iLQGames`](../solvers/ilqgames.md) | No | Fastest for unconstrained nonlinear games |
-| [`ALGAMES`](../solvers/algames.md) | Yes | Required for shared/private constraints |
-| [`FNELQ`](../solvers/fnelq.md) | No | Only if all costs are LQ |
+Driven by each solver's `solver_capabilities` (see [Solver Selection](../basics/solver_selection.md)):
+
+| Solver | Shared/private constraints | Notes |
+|--------|-----------------------------|-------|
+| [`iLQGames`](../solvers/ilqgames.md) | **No** (asserts) | Unconstrained nonlinear games. |
+| [`ALGAMES`](../solvers/algames.md) | Yes | Open-loop equilibrium approximation; the only built-in solver for constrained `PDGNEProblem`s. |
+| [`FNELQ`](../solvers/fnelq.md) | No | **Not** applicable: `PDGNEProblem` uses function dynamics (`SeparableDynamics`), and `FNELQ` requires `LinearDynamics`. Use `LQGameProblem`. |
+| [`YiPavel`](../solvers/yipavel.md), [`LIBR`](../solvers/libr.md) | Method-specific | Require `ConvexGameProblem` / `LexicographicGameProblem` respectively. |

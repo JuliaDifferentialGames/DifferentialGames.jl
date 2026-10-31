@@ -70,8 +70,9 @@ end
 
 ## Accessors
 
+`unknown_players(prob)` returns the indices of players with [`UnknownObjective`](@ref) knowledge. (Its docstring is currently attached to the wrong method in `DifferentialGamesBase`, so it cannot be included via `@docs`; see the audit.)
+
 ```@docs
-unknown_players
 known_players
 n_unknown
 known_objective

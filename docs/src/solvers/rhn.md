@@ -49,6 +49,28 @@ prob = RecedingHorizonNashProblem(horizon_game, x0, 50)
 sol  = solve(prob, solver)
 ```
 
+### Example
+
+A double integrator regulated to the origin: at each of 15 steps a 10-step finite-horizon game is solved with `FNELQ` and the first control is applied. The closed-loop state is returned in `sol.X`.
+
+```@example rhn
+using DifferentialGames, LinearAlgebra
+
+A = [1.0 0.1; 0.0 1.0]
+B = [reshape([0.0, 0.1], 2, 1)]
+horizon_game = LQGameProblem(A, B, [Matrix(1.0I(2))], [fill(0.1, 1, 1)], [Matrix(5.0I(2))],
+                             [1.0, 0.0], 1.0; dt = 0.1)             # 10-step prediction horizon
+
+prob = RecedingHorizonNashProblem(horizon_game, [1.0, 0.0], 15)       # 15 closed-loop steps
+sol  = solve(prob, RecedingHorizonNash(FNELQ()))
+
+(converged = sol.converged, state_size = size(sol.X), control_size = size(sol.U[1]),
+ final_state = round.(sol.X[:, end]; digits = 3), initial_norm = norm(sol.X[:, 1]),
+ final_norm = norm(sol.X[:, end]))
+```
+
+The final state norm is smaller than the initial one: the closed loop regulates the system towards the origin. Compare with the open-loop plan of the first solve to see the effect of re-solving at each step.
+
 ## Solver Type Documentation
 
 ```@docs
@@ -129,7 +151,7 @@ The first solve (t=1) has no warm-start. Subsequent solves use the shifted solut
 
 ## References
 
-Mattingley, J., Wang, A., Boyd, S. (2011). *Receding Horizon Control.*
+[Mattingley2011](@cite). (The earlier text listed the second author as "A. Wang"; the cited paper is by Mattingley, Y. Wang and Boyd.)
 
 Mahajan et al. (2026). *Conic-TinyMPC* (shift warm-start convention).
 
