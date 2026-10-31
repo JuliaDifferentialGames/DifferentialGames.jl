@@ -32,6 +32,12 @@ using LinearAlgebra
         @test isdefined(DifferentialGames, :FNELQ)
         @test isdefined(DifferentialGames, :iLQGames)
         @test isdefined(DifferentialGames, :ALGAMES)
+        @test isdefined(DifferentialGames, :SFNELQ)
+        @test isdefined(DifferentialGames, :CCiLQGames)
+        @test isdefined(DifferentialGames, :StochasticGameProblem)
+        @test isdefined(DifferentialGames, :ChanceConstraint)
+        @test isdefined(DifferentialGames, :JointRiskBudget)
+        @test isdefined(DifferentialGames, :linear_observation)
 
         # solve interface
         @test isdefined(DifferentialGames, :solve)
@@ -108,4 +114,30 @@ using LinearAlgebra
         @test state_dim(game) == n
     end
 
+    @testset "Stochastic games end to end (SFNELQ, shared observation, CCiLQGames)" begin
+        A = [1.0 0.1; 0.0 1.0]; B = [reshape([0.0, 0.1], 2, 1)]
+        g = LQGameProblem(A, B, [Matrix(1.0I(2))], [fill(0.5, 1, 1)], [Matrix(3.0I(2))], [1.0, 0.0], 5.0; dt = 1.0)
+        W = [Matrix(0.02I(2)) for _ in 1:5]
+        sg = StochasticGameProblem(g, ProcessNoiseModel(W); initial_covariance = Matrix(0.05I(2)))
+        sol = solve(sg, SFNELQ())
+        @test sol.solver_info[:status] === :solved
+        @test get_expected_costs(sol)[1] > solve(g, FNELQ()).trajectories[1].cost
+        obs = linear_observation([1.0 0.0], fill(0.05, 1, 1))
+        sh = solve(StochasticGameProblem(g, ProcessNoiseModel(W); initial_covariance = Matrix(0.05I(2)),
+                                         information = obs), SFNELQ())
+        @test tr(sh.solver_info[:state_covariances][end]) > tr(sh.solver_info[:posterior_covariances][end])
+
+        dt, N = 0.1, 10
+        A2 = Matrix(1.0I(2)); B2 = [reshape([dt, 0.0], 2, 1), reshape([0.0, dt], 2, 1)]
+        Q1 = [4.0 0.0; 0.0 0.0]; Q2 = [0.0 0.0; 0.0 4.0]
+        g2 = LQGameProblem(A2, B2, [Q1, Q2], [fill(0.1, 1, 1), fill(0.1, 1, 1)], [Q1, Q2], [0.0, 0.0], N * dt;
+                           dt = dt, q = [-(Q1 * [1.0, 0.0]), -(Q2 * [0.0, 1.0])])
+        cc = ChanceConstraint(StateBounds(1; state_offset = 0, state_dim = 1, lower = [-5.0], upper = [0.6]), 0.1)
+        sg2 = StochasticGameProblem(g2, ProcessNoiseModel(Matrix(0.01I(2))); chance_constraints = [cc],
+                                    joint_risk = JointRiskBudget(0.1))
+        cs = solve(sg2, CCiLQGames(mc_samples = 2000, seed = 1))
+        @test cs.converged
+        @test cs.solver_info[:joint_risk_bound] ≈ 0.1
+        @test cs.solver_info[:monte_carlo].any_violation <= 0.1 + 0.03
+    end
 end

@@ -55,6 +55,7 @@ makedocs(
             "solve an LQ game"                 => "tutorials/lq_games.md",
             "solve a nonlinear game"           => "tutorials/nonlinear_games.md",
             "handle constraints"               => "tutorials/constrained_games.md",
+            "solve a stochastic game"          => "tutorials/stochastic_games.md",
             "choose a solver"                  => "basics/solver_selection.md",
         ],
         "The ecosystem" => [
@@ -89,6 +90,7 @@ makedocs(
         "Solvers" => [
             "FNELQ"               => "solvers/fnelq.md",
             "SFNELQ"              => "solvers/sfnelq.md",
+            "CCiLQGames"          => "solvers/ccilqgames.md",
             "iLQGames"            => "solvers/ilqgames.md",
             "ALGAMES"             => "solvers/algames.md",
             "DGSQP"               => "solvers/dgsqp.md",

@@ -54,7 +54,7 @@ determinized = determinize(stochastic)
 !!! warning "Current limitation"
     The determinized game's dynamics is a **discrete-time map** wrapped in `CoupledNonlinearDynamics`, which the solvers integrate as a *continuous-time* right-hand side. As a result `solve(determinize(sg), iLQGames())` currently fails (an `InexactError` while indexing the time step), contrary to the `determinize` docstring. The construction itself works; solving it needs a discrete-time nonlinear dynamics type, tracked in the audit.
 
-The complete stochastic API (SDE dynamics, discretization, propagators, chance evaluators, the POMDPs.jl adapter) is documented in the `DifferentialGamesBase.jl` API reference.
+For solving stochastic games end to end — risk budgets, shared observations, and what each guarantee means — see [How to solve a stochastic game](../tutorials/stochastic_games.md). The complete stochastic API (SDE dynamics, discretization, propagators, chance evaluators, the POMDPs.jl adapter) is documented in the `DifferentialGamesBase.jl` API reference.
 
 ## Robust games
 

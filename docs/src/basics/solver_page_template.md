@@ -17,5 +17,5 @@ Status of the existing pages:
 
 | Solver | Template coverage |
 |--------|-------------------|
-| [`FNELQ`](../solvers/fnelq.md), [`iLQGames`](../solvers/ilqgames.md), [`ALGAMES`](../solvers/algames.md), [`SFNELQ`](../solvers/sfnelq.md) | sections 1–10 present (some content shared across headings) |
+| [`FNELQ`](../solvers/fnelq.md), [`iLQGames`](../solvers/ilqgames.md), [`ALGAMES`](../solvers/algames.md), [`SFNELQ`](../solvers/sfnelq.md), [`CCiLQGames`](../solvers/ccilqgames.md) | sections 1–10 present (some content shared across headings) |
 | [`LIBR`](../solvers/libr.md), [`YiPavel`](../solvers/yipavel.md), [`InverseLQGames`](../solvers/invlq.md), [`RecedingHorizonNash`](../solvers/rhn.md) | partial: option tables verified against the structs; examples and guarantees not yet re-verified |
